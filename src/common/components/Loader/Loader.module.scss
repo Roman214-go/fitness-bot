@@ -1,0 +1,26 @@
+.container {
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  flex-direction: column;
+  gap: 25px;
+  &_text {
+    color: #8f9aa2;
+  }
+  &_loader {
+    animation: spin 1s linear infinite;
+    font-size: larger;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
