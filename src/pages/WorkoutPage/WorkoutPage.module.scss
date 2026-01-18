@@ -1,0 +1,230 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.card {
+  padding: 20px;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #c4ff61;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+}
+
+.headerTitle {
+  font-size: 16px;
+}
+
+.timer {
+  font-size: 16px;
+}
+
+.videoContainer {
+  background: linear-gradient(135deg, #9b8fff 0%, #b8a6ff 100%);
+  border-radius: 16px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.exerciseName {
+  background: white;
+  padding: 12px 16px;
+  border-radius: 0 0 12px 12px;
+  font-size: 14px;
+  color: #000;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.weightInput {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.input {
+  flex: 1;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #666;
+  font-size: 14px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #c4ff61;
+}
+
+.weightButton {
+  width: 68px;
+  height: 48px;
+  border-radius: 12px;
+  background: #e2f163;
+  border: none;
+  font-size: 40px;
+  cursor: pointer;
+  color: white;
+}
+
+.progressContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.progressRing {
+  transform: rotate(-90deg);
+}
+
+.progressRingBackground {
+  fill: none;
+  stroke: #3a3a3a;
+  stroke-width: 12;
+}
+
+.progressRingCircle {
+  fill: none;
+  stroke: #c4ff61;
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.progressContent {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.setCounter {
+  font-size: 36px;
+  font-weight: bold;
+  color: white;
+}
+
+.startButton {
+  padding: 8px 24px;
+  border-radius: 20px;
+  background: rgba(196, 255, 97, 0.2);
+  border: 1px solid #c4ff61;
+  color: #c4ff61;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30px;
+  color: #666;
+}
+
+.infoLabel {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.completeButton {
+  padding: 16px;
+  border-radius: 12px;
+  background: #c4ff61;
+  border: none;
+  color: #000;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.completeButton:hover {
+  background: #d4ff81;
+  transform: translateY(-2px);
+}
+
+.skipButton {
+  padding: 16px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid #444;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.skipButton:hover {
+  border-color: #666;
+  color: #ccc;
+}
+
+.completedCard {
+  background: #2a2a2a;
+  border-radius: 24px;
+  padding: 60px 40px;
+  text-align: center;
+  color: white;
+}
+
+.completedTitle {
+  font-size: 32px;
+  margin-bottom: 20px;
+  color: #c4ff61;
+}
+
+.completedTime {
+  font-size: 24px;
+  color: #999;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 16px;
+  }
+
+  .videoContainer {
+    height: 160px;
+  }
+}

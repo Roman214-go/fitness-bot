@@ -1,0 +1,108 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #2a2a2a;
+  position: relative;
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e2f163;
+  border: none;
+  top: 5%;
+  left: 2%;
+  display: flex;
+  padding-left: 13px;
+  align-items: center;
+  justify-content: center;
+  color: #1a1a1a;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.time {
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.content {
+  padding: 20px;
+}
+
+.repeatCount {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.exerciseList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.exerciseCard {
+  background: transparent;
+  border: 2px solid #c4ff4d;
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 15px;
+  color: #c4ff4d;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.startButton {
+  background: #c4ff4d;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 12px;
+  padding: 18px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.skipButton {
+  background: transparent;
+  color: #ffffff;
+  border: 2px solid #3a3a3a;
+  border-radius: 12px;
+  padding: 18px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}

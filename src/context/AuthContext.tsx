@@ -24,25 +24,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const DEV_USER: User = {
+  id: 'dev-user',
+  telegramId: 0,
+  username: 'dev_user',
+  firstName: 'Dev',
+  lastName: 'User',
+  role: 'free',
+  mainFormCompleted: true,
+  anamnesisCompleted: true,
+  subscriptionExpiry: undefined,
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  /**
-   * ВРЕМЕННАЯ заглушка
-   * В проде здесь должен быть запрос к backend
-   */
   const fetchUserData = async (telegramId: number): Promise<User> => {
     return {
+      ...DEV_USER,
       id: String(telegramId),
       telegramId,
-      username: window.Telegram?.WebApp?.initDataUnsafe?.user?.username || 'user',
-      firstName: window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name || 'User',
-      lastName: window.Telegram?.WebApp?.initDataUnsafe?.user?.last_name,
-      role: 'guest', // 'guest' | 'free' | 'premium' | 'admin'
-      mainFormCompleted: false,
-      anamnesisCompleted: false,
-      subscriptionExpiry: undefined,
     };
   };
 
@@ -61,38 +63,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user;
   const isPremium = checkSubscription();
 
-  /**
-   * Инициализация Telegram WebApp
-   * ВАЖНО: useLayoutEffect — чтобы избежать мерцаний
-   */
   useLayoutEffect(() => {
     const init = async () => {
       const tg = window.Telegram?.WebApp;
 
-      if (!tg) {
-        setIsLoading(false);
-        return;
-      }
+      if (tg?.initDataUnsafe?.user) {
+        tg.ready();
+        tg.expand();
 
-      tg.ready();
-      tg.expand();
-
-      const telegramUser = tg.initDataUnsafe?.user;
-
-      if (!telegramUser) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
+        const telegramUser = tg.initDataUnsafe.user;
         const userData = await fetchUserData(telegramUser.id);
         setUser(userData);
-      } catch (error) {
-        console.error('Ошибка получения пользователя:', error);
-        setUser(null);
-      } finally {
         setIsLoading(false);
+        return;
       }
+
+      setUser(DEV_USER);
+      setIsLoading(false);
     };
 
     init();

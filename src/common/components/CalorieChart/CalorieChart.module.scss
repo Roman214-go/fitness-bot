@@ -1,0 +1,36 @@
+.calories {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.segments {
+  background: #313131;
+  padding: 5px 15px;
+  border-radius: 10px;
+  gap: 20px;
+  box-shadow: -2px 5px 10px rgba(34, 60, 80, 0.186);
+}
+
+.segments {
+  .segment:last-child {
+    border-bottom: none;
+  }
+}
+
+.segment {
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid gray;
+  &_color {
+    width: 7px;
+    height: 7px;
+    border-radius: 100%;
+  }
+  &_labelContainer {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+}

@@ -1,61 +1,55 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, NavLink } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useAuth } from '../../../context/AuthContext';
+
+import { FiAward } from 'react-icons/fi';
+import { GoPerson } from 'react-icons/go';
+import { FiHome } from 'react-icons/fi';
+import { MdCalendarToday } from 'react-icons/md';
+import { IoChatbubblesSharp } from 'react-icons/io5';
+
+import styles from './Layout.module.scss';
 
 export const Layout = () => {
-  const { user, isPremium } = useAuth();
   const navigate = useNavigate();
+
   useEffect(() => {
-    // Настройка кнопки "Назад" в Telegram
     const tg = window.Telegram?.WebApp;
     if (tg?.BackButton) {
-      tg.BackButton.onClick(() => {
-        navigate(-1);
-      });
+      tg.BackButton.onClick(() => navigate(-1));
     }
   }, [navigate]);
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff',
-        color: window.Telegram?.WebApp?.themeParams?.text_color || '#000000',
-      }}
-    >
-      <nav
-        style={{
-          padding: '1rem',
-          background: window.Telegram?.WebApp?.themeParams?.button_color || '#3390ec',
-          color: window.Telegram?.WebApp?.themeParams?.button_text_color || '#ffffff',
-          marginBottom: '1rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <div>
-          <Link to='/' style={{ marginRight: '1rem', color: 'inherit' }}>
-            Главная
-          </Link>
-          <Link to='/features' style={{ marginRight: '1rem', color: 'inherit' }}>
-            Возможности
-          </Link>
-          {isPremium && (
-            <Link to='/premium' style={{ marginRight: '1rem', color: 'inherit' }}>
-              Premium
-            </Link>
-          )}
-        </div>
-        <div>
-          {user && (
-            <span>
-              {user.firstName} {isPremium ? '⭐' : ''}
-            </span>
-          )}
-        </div>
+    <div className={styles.container}>
+      <main className={styles.content}>
+        <Outlet />
+      </main>
+
+      <nav className={styles.nav}>
+        <NavLink to='/' className={({ isActive }) => (isActive ? styles.active : '')}>
+          <FiHome />
+          <span className={styles.label}>Главная</span>
+        </NavLink>
+
+        <NavLink to='/calendar' className={({ isActive }) => (isActive ? styles.active : '')}>
+          <MdCalendarToday /> <span className={styles.label}>Календарь</span>
+        </NavLink>
+
+        <NavLink to='/leaders' className={({ isActive }) => (isActive ? styles.active : '')}>
+          <FiAward />
+          <span className={styles.label}>Лидеры</span>
+        </NavLink>
+
+        <NavLink to='/chat' className={({ isActive }) => (isActive ? styles.active : '')}>
+          <IoChatbubblesSharp />
+          <span className={styles.label}>Чат</span>
+        </NavLink>
+
+        <NavLink to='/profile' className={({ isActive }) => (isActive ? styles.active : '')}>
+          <GoPerson />
+          <span className={styles.label}>Профиль</span>
+        </NavLink>
       </nav>
-      <Outlet />
     </div>
   );
 };

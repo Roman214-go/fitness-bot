@@ -8,6 +8,15 @@ import HomePage from '../pages/HomePage/HomePage';
 import { OnboardingGuard } from './components/Onboarding/OnboardingGuard';
 import { MainFormPage } from '../pages/MainFormPage/MainFormPage';
 import Onboarding from './components/Onboarding';
+import { AnamnesisFormPage } from '../pages/AnamnesisFormPage/AnamnesisFormPage';
+import { CalendarPage } from '../pages/CalendarPage/CalendarPage';
+import { LeadersPage } from '../pages/LeadersPage/LeadersPage';
+import { ChatPage } from '../pages/ChatPage/ChatPage';
+import { ProfilePage } from '../pages/ProfilePage/ProfilePage';
+import ProfileEditPage from '../pages/ProfileEditPage/ProfileEditPage';
+import { TrainingPage } from '../pages/TrainingPage/TrainingPage';
+import { WorkoutPage } from '../pages/WorkoutPage/WorkoutPage';
+import { SubscriptionGuard } from '../context/SubscriptionGuard';
 
 const App = () => {
   return (
@@ -17,18 +26,31 @@ const App = () => {
           <Routes>
             <Route path='/onboarding' element={<Onboarding />} />
             <Route path='/main-form' element={<MainFormPage />} />
+            <Route path='/anamnesis-form' element={<AnamnesisFormPage />} />
             <Route element={<Layout />}>
-              {/* Публичные маршруты */}
               <Route path='/' element={<HomePage />} />
-              {/* <Route path='/features' element={<FeaturesPage />} />
-            <Route path='/subscription' element={<SubscriptionPage />} />
-            <Route path='/forbidden' element={<ForbiddenPage />} /> */}
-
-              {/* Защищенные маршруты только для Premium пользователей */}
-              {/* <Route element={<ProtectedRoute requirePremium={true} />}>
-              <Route path='/premium' element={<PremiumPage />} />
-              </Route> */}
+              <Route
+                path='/calendar'
+                element={
+                  <SubscriptionGuard>
+                    <CalendarPage />
+                  </SubscriptionGuard>
+                }
+              />
+              <Route path='/leaders' element={<LeadersPage />} />
+              <Route
+                path='/chat'
+                element={
+                  <SubscriptionGuard>
+                    <ChatPage />
+                  </SubscriptionGuard>
+                }
+              />{' '}
+              <Route path='/profile' element={<ProfilePage />} />
             </Route>
+            <Route path='/profile-edit' element={<ProfileEditPage />} />
+            <Route path='/trainee' element={<TrainingPage />} />
+            <Route path='/workout' element={<WorkoutPage />} />
           </Routes>
         </OnboardingGuard>
       </AuthProvider>

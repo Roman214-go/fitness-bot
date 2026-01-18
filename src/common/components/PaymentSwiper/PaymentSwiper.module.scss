@@ -1,0 +1,46 @@
+:global(.swiper-button-prev) {
+  left: -8px !important;
+}
+
+:global(.swiper-button-next) {
+  right: -8px !important;
+}
+
+:global(.swiper-button-prev),
+:global(.swiper-button-next) {
+  svg {
+    height: 20px !important;
+    color: #555555;
+  }
+}
+
+.swiper_container {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  gap: 40px;
+  box-shadow: -2px 5px 10px rgba(255, 255, 255, 0.186);
+  padding: 15px;
+  margin: 15px;
+  background-color: #313131;
+  border-radius: 10px;
+  ul {
+    margin-left: 20px;
+    list-style-type: disc;
+  }
+  li {
+    padding: 5px;
+    font-size: 12px;
+  }
+}
+
+.title {
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 2;
+}
+
+.price {
+  font-size: 24px;
+  text-align: right;
+}

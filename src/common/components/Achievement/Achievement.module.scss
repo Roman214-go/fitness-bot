@@ -1,0 +1,44 @@
+.achievement {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+  text-align: center;
+
+  img {
+    width: 48px;
+    height: 48px;
+  }
+
+  span {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.unlocked {
+  background: linear-gradient(135deg, #ffd700, #ffb700);
+}
+
+.locked {
+  background: #2e2e2e;
+  opacity: 0.4;
+  cursor: default;
+
+  img {
+    filter: grayscale(100%);
+  }
+}

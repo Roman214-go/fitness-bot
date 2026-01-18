@@ -1,0 +1,62 @@
+.container {
+  padding: 24px 16px 20px;
+  color: #fff;
+}
+
+.title {
+  text-align: center;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.value {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: end;
+  margin-left: 25px;
+  font-weight: 600;
+  color: #d7ff5f;
+  margin-top: 30px;
+  margin-bottom: 14px;
+
+  span {
+    font-size: 14px;
+    margin-left: 4px;
+  }
+}
+
+.scale {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tick {
+  width: 2px;
+  height: 10px;
+  background: #8f9aa2;
+  border-radius: 1px;
+}
+
+.tickSide {
+  border-radius: 2px;
+  height: 22px;
+  width: 4px;
+}
+
+/* основной вес */
+.tickCenter {
+  height: 34px;
+  width: 5px;
+  background: #d7ff5f;
+  border-radius: 2px;
+}
+
+.range {
+  display: flex;
+  justify-content: space-around;
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 6px;
+}

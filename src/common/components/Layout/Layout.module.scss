@@ -1,0 +1,58 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  height: 64px;
+  background: #896cfe;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.nav a {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  color: #ffffff;
+
+  transition: color 0.2s ease;
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.nav svg {
+  font-size: 22px;
+  margin-bottom: 2px;
+}
+
+.active {
+  transform: scale(1.02);
+  span {
+    font-weight: 700;
+  }
+}
+
+.icon {
+  font-size: 20px;
+}
+
+.label {
+  font-size: 12px;
+}

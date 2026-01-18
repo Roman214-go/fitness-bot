@@ -1,0 +1,139 @@
+.formContainer {
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: white;
+}
+
+.formTitle {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  background: #313131;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: -2px 5px 10px rgba(34, 60, 80, 0.186);
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.formLabel {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 20%;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: white;
+}
+
+.radioLabel input[type='radio'],
+input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  margin: 0;
+  accent-color: #896cfe;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 2px solid #bdbdbd;
+  border-radius: 4px;
+  background-color: white;
+  position: relative;
+  transition: all 0.2s;
+  border-color: #896cfe;
+
+  &:checked {
+    background-color: #896cfe;
+    border-color: #896cfe;
+
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  }
+}
+
+.conditionalField {
+  margin-top: 8px;
+}
+
+.textInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.textInput:focus {
+  outline: none;
+  border-color: #2dd4bf;
+}
+
+.textInput::placeholder {
+  color: #9ca3af;
+}
+
+.inputError {
+  border-color: #ef4444;
+}
+
+.error {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 14px;
+  background: #2dd4bf;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+
+.submitButton:hover {
+  background: #14b8a6;
+}
+
+.submitButton:active {
+  transform: scale(0.98);
+}

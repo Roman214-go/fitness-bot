@@ -1,0 +1,131 @@
+.container {
+  color: #fff;
+}
+
+.header {
+  text-align: center;
+  font-size: 20px;
+  padding: 20px;
+}
+
+.podiumSection {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.podiumItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatarContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar {
+  border-radius: 50%;
+  background-color: #666;
+  object-fit: cover;
+}
+
+.firstPlace {
+  width: 120px;
+  height: 120px;
+  border: 4px solid #d4af37;
+}
+
+.secondPlace {
+  width: 80px;
+  height: 80px;
+  border: 3px solid #c0c0c0;
+}
+
+.thirdPlace {
+  width: 80px;
+  height: 80px;
+  border: 3px solid #cd7f32;
+}
+
+.badge {
+  position: absolute;
+  bottom: -5px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  background-color: #d4af37;
+}
+
+.secondBadge {
+  background-color: #c0c0c0;
+}
+
+.thirdBadge {
+  background-color: #cd7f32;
+}
+
+.leaderboardList {
+  padding: 0 10px;
+  margin-bottom: 20px;
+}
+
+.listItem:nth-child(even) {
+  background-color: #313131;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 12px;
+  border-bottom: 1px solid #333;
+}
+
+.rank {
+  font-size: 16px;
+  color: #888;
+  text-align: center;
+  min-width: 50px;
+}
+
+.listAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #666;
+  object-fit: cover;
+}
+
+.nickname {
+  flex: 1;
+  font-size: 16px;
+}
+
+.score {
+  font-size: 14px;
+  color: #888;
+}
+
+.table_header {
+  display: flex;
+  justify-content: space-between;
+  span {
+    padding: 10px;
+    font-size: 16px;
+    color: #999999;
+  }
+}

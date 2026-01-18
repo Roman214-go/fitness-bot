@@ -1,17 +1,16 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { ReactNode } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import Loader from '../Loader';
 
 interface OnboardingGuardProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
 
-  // Пока грузится auth — вообще ничего не делаем
   if (isLoading) {
     return <Loader />;
   }
@@ -21,30 +20,29 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   }
 
   const { role, mainFormCompleted, anamnesisCompleted } = user;
-  console.log(user);
+  const pathname = location.pathname;
 
-  // Гость
   if (role === 'guest') {
-    if (!mainFormCompleted && !anamnesisCompleted && location.pathname !== '/onboarding') {
-      navigate('/onboarding', { replace: true });
-      return null;
+    if (pathname !== '/main-form' && pathname !== '/anamnesis-form') {
+      if (pathname !== '/onboarding') {
+        return <Navigate to='/onboarding' replace />;
+      }
+      return <>{children}</>;
     }
 
-    if (!mainFormCompleted && location.pathname !== '/main-form') {
-      navigate('/main-form', { replace: true });
-      return null;
+    if (!mainFormCompleted) {
+      if (pathname !== '/main-form') {
+        return <Navigate to='/main-form' replace />;
+      }
+      return <>{children}</>;
     }
 
-    if (mainFormCompleted && !anamnesisCompleted && location.pathname !== '/anamnesis-form') {
-      navigate('/anamnesis-form', { replace: true });
-      return null;
+    if (mainFormCompleted && !anamnesisCompleted) {
+      if (pathname !== '/anamnesis-form') {
+        return <Navigate to='/anamnesis-form' replace />;
+      }
+      return <>{children}</>;
     }
-  }
-
-  // Авторизованный
-  if (role !== 'guest' && location.pathname !== '/onboarding') {
-    navigate('/onboarding', { replace: true });
-    return null;
   }
 
   return <>{children}</>;

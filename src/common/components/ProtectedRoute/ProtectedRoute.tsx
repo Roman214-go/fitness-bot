@@ -7,14 +7,13 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ requirePremium = false }: ProtectedRouteProps) => {
-  const { user, isAuthenticated, isPremium } = useAuth();
+  const { isAuthenticated, isPremium } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to='/' replace />;
   }
 
-  // Проверка подписки
-  if (requirePremium && !isPremium && user?.role !== 'admin') {
+  if (requirePremium && !isPremium) {
     return <Navigate to='/subscription' replace />;
   }
 
