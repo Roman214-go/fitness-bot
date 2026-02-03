@@ -73,7 +73,7 @@
     height: 20px;
     cursor: pointer;
     margin: 0;
-    accent-color: #896cfe;
+    accent-color: #672dca;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -82,11 +82,11 @@
     background-color: white;
     position: relative;
     transition: all 0.2s;
-    border-color: #896cfe;
+    border-color: #672dca;
 
     &:checked {
-      background-color: #896cfe;
-      border-color: #896cfe;
+      background-color: #672dca;
+      border-color: #672dca;
 
       &::after {
         content: '✓';
@@ -148,11 +148,6 @@
   transition: all 0.2s;
   color: #333;
 
-  &:hover {
-    border-color: #4776ab;
-    background-color: #f0f9fb;
-  }
-
   &.active {
     background-color: #4776ab;
     color: white;
@@ -210,11 +205,6 @@
   background-color: #2f2f2f;
   overflow: hidden;
   position: relative;
-
-  &:hover {
-    border-color: #4776ab;
-    background-color: #383939;
-  }
 
   input[type='file'] {
     display: none;
@@ -283,10 +273,6 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 
-  &:hover {
-    background-color: #00a5bb;
-  }
-
   &:active {
     background-color: #008fa1;
   }
@@ -329,13 +315,6 @@
 
     .formLabel {
       color: #ff4444;
-    }
-
-    .radioLabel,
-    .checkboxLabel {
-      &:hover {
-        background-color: #fff5f5;
-      }
     }
   }
 }

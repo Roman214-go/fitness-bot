@@ -1,55 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
 import Button from '../../common/components/Button';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
-import styles from './WorkoutPage.module.scss';
+import styles from './HomeworkPage.module.scss';
 import { useCompleteSetMutation, useCompleteWorkoutMutation } from '../TrainingPage/api/getTrainee';
 import { FaChevronDown } from 'react-icons/fa';
+import { useGetAllHomeworkQuery } from './api/getHomework';
 
-interface PersonalExercise {
-  name: string;
-  reps: number;
-  description: string;
-  weight_kg?: number;
-  video_url: string;
-}
-
-interface PersonalSet {
-  personal_workout_id: number;
-  id: number;
-  color_code: string;
-  personal_exercises: PersonalExercise[];
-}
-
-interface Workout {
-  repetitions: number;
-  personal_sets: PersonalSet[];
-}
-
-export const WorkoutPage: React.FC = () => {
-  const location = useLocation();
-  const { workout } = location.state as { workout: Workout };
+export const HomeworkPage: React.FC = () => {
+  const { data: homeworkData, isLoading, error } = useGetAllHomeworkQuery();
   const navigate = useNavigate();
+
+  const [completeSet] = useCompleteSetMutation();
+  const [completeWorkout] = useCompleteWorkoutMutation();
+
+  const [timer, setTimer] = useState(0);
+  const [currentHomeworkIndex, setCurrentHomeworkIndex] = useState(0);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [open, setOpen] = useState(false);
-
-  const [completeSet, { isLoading: isCompleting }] = useCompleteSetMutation();
-  const [completeWorkout, { isLoading: isCompletingWorkout }] = useCompleteWorkoutMutation();
-
-  const [timer, setTimer] = useState<number>(0);
-  const [currentSetIndex, setCurrentSetIndex] = useState<number>(0);
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number>(0);
-  const [weight, setWeight] = useState<string>('');
-  const [isCompleted, setIsCompleted] = useState<boolean>(false);
-
-  const currentSet = workout.personal_sets[currentSetIndex];
-  const currentExercise = currentSet.personal_exercises[currentExerciseIndex];
-
-  const totalExercisesInSet = currentSet.personal_exercises.length;
-  const progress = (currentExerciseIndex / totalExercisesInSet) * 100;
-
-  const isLastExerciseInSet = currentExerciseIndex === totalExercisesInSet - 1;
-  const isLastSet = currentSetIndex === workout.personal_sets.length - 1 && isLastExerciseInSet;
+  const [isCompleted, setIsCompleted] = useState(false);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -65,6 +35,16 @@ export const WorkoutPage: React.FC = () => {
       }
     };
   }, []);
+  if (isLoading) return <p>Загрузка...</p>;
+  if (error) return <p>Ошибка при загрузке данных</p>;
+  if (!homeworkData || homeworkData.length === 0) return <p>Домашнее задание отсутствует</p>;
+
+  const currentHomework = homeworkData[currentHomeworkIndex];
+  const currentExercise = currentHomework.personal_exercises[currentExerciseIndex];
+
+  const totalExercises = currentHomework.personal_exercises.length;
+  const isLastExercise = currentExerciseIndex === totalExercises - 1;
+  const isLastHomework = currentHomeworkIndex === homeworkData.length - 1 && isLastExercise;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -72,26 +52,22 @@ export const WorkoutPage: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleComplete = async () => {
+  const handleNext = async () => {
     try {
-      toast('Завершаем упражнение...');
-
-      if (isLastExerciseInSet) {
-        await completeSet(currentSet.id).unwrap();
+      toast('Обновляем прогресс...');
+      if (isLastExercise) {
+        await completeSet(currentHomework.id).unwrap();
         toast.success('Сет завершён!');
       }
 
-      if (!isLastExerciseInSet) {
+      if (!isLastExercise) {
         setCurrentExerciseIndex(currentExerciseIndex + 1);
-        setWeight('');
-      } else if (!isLastSet) {
-        setCurrentSetIndex(currentSetIndex + 1);
+      } else if (!isLastHomework) {
+        setCurrentHomeworkIndex(currentHomeworkIndex + 1);
         setCurrentExerciseIndex(0);
-        setWeight('');
       } else {
-        console.log(workout);
-        await completeWorkout(workout.personal_sets[0].personal_workout_id).unwrap();
-        toast.success('Тренировка завершена!');
+        await completeWorkout(currentHomework.id).unwrap();
+        toast.success('Домашнее задание завершено!');
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
@@ -101,24 +77,23 @@ export const WorkoutPage: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Не удалось завершить упражнение или тренировку');
+      toast.error('Ошибка при завершении упражнения');
     }
   };
 
   const handleSkip = () => {
-    if (!isLastExerciseInSet) {
+    if (!isLastExercise) {
       setCurrentExerciseIndex(currentExerciseIndex + 1);
-      setWeight('');
-    } else if (!isLastSet) {
-      setCurrentSetIndex(currentSetIndex + 1);
+    } else if (!isLastHomework) {
+      setCurrentHomeworkIndex(currentHomeworkIndex + 1);
       setCurrentExerciseIndex(0);
-      setWeight('');
     } else {
       setIsCompleted(true);
       setTimeout(() => navigate('/calendar'), 2500);
     }
   };
 
+  const progress = (currentExerciseIndex / totalExercises) * 100;
   const strokeDasharray = 2 * Math.PI * 63.75;
   const strokeDashoffset = strokeDasharray - (progress / 100) * strokeDasharray;
 
@@ -126,7 +101,7 @@ export const WorkoutPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <div className={styles.completedCard}>
-          <h1 className={styles.completedTitle}>🎉 Тренировка завершена!</h1>
+          <h1 className={styles.completedTitle}>🎉 Домашнее задание завершено!</h1>
           <p className={styles.completedTime}>Время: {formatTime(timer)}</p>
         </div>
       </div>
@@ -135,31 +110,18 @@ export const WorkoutPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.card} style={{ borderColor: currentSet.color_code }}>
+      <div className={styles.card}>
         <div className={styles.header}>
-          <div />
-          <span className={styles.headerTitle}>
-            Сет {currentSetIndex + 1}/{workout.personal_sets.length}
-          </span>
+          <span className={styles.headerTitle}>Домашнее задание</span>
           <span className={styles.timer}>{formatTime(timer)}</span>
         </div>
 
         <ReactPlayer controls style={{ width: '100%', height: '35vh' }} src={currentExercise.video_url} />
 
         <div className={styles.exerciseContainer}>
-          <div
-            className={styles.exerciseName}
-            style={{
-              maxHeight: open ? '1200px' : '10px',
-            }}
-          >
+          <div className={styles.exerciseName} style={{ maxHeight: open ? '1200px' : '10px' }}>
             <p>{currentExercise.name}</p>
-            <div
-              onClick={() => setOpen(!open)}
-              style={{
-                cursor: 'pointer',
-              }}
-            >
+            <div onClick={() => setOpen(!open)} style={{ cursor: 'pointer' }}>
               <FaChevronDown
                 color='#e2f163'
                 style={{
@@ -183,21 +145,6 @@ export const WorkoutPage: React.FC = () => {
           </div>
         </div>
 
-        {currentExercise.weight_kg && (
-          <div className={styles.weightInput}>
-            <input
-              type='text'
-              placeholder='Введите вес, кг'
-              value={weight}
-              onChange={e => setWeight(e.target.value)}
-              className={styles.input}
-            />
-            <button className={styles.weightButton} onClick={() => console.log(weight)}>
-              +
-            </button>
-          </div>
-        )}
-
         <div className={styles.progressContainer}>
           <svg className={styles.progressRing} width='150' height='150'>
             <circle className={styles.progressRingBackground} cx='75' cy='75' r='63.75' />
@@ -215,22 +162,15 @@ export const WorkoutPage: React.FC = () => {
               подходы
             </p>
             <div className={styles.setCounter}>
-              {currentExerciseIndex}/{totalExercisesInSet}
+              {currentExerciseIndex}/{totalExercises}
             </div>
           </div>
         </div>
 
-        <div className={styles.progressInfo}>
-          <div className={styles.infoLabel}>Рекомендуем отдыхать 2-3 минуты между подходами</div>
-        </div>
-
         <div className={styles.actions}>
-          <Button onClick={handleComplete} disabled={isCompleting || isCompletingWorkout}>
-            {isLastExerciseInSet ? 'Сет выполнен' : 'Упражнение выполнено'}
-          </Button>
-
+          <Button onClick={handleNext}>Следующее упражнение</Button>
           <Button buttonType='secondary' onClick={handleSkip}>
-            Пропустить упражнение
+            Пропустить
           </Button>
         </div>
       </div>

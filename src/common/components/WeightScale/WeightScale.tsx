@@ -1,4 +1,3 @@
-import { HiddenText } from '../HiddenText/HiddenText';
 import styles from './WeightScale.module.scss';
 
 interface Props {
@@ -15,7 +14,7 @@ export const WeightPrediction = ({ value }: Props) => {
         <br />
         через 30 дней
       </div>
-      <HiddenText text='Рассчитан на основе формул похудения' />
+
       <div className={styles.value}>
         <span style={{ color: '#B3A0FF' }}>{value - 2.5}кг</span>
         <span style={{ fontSize: 42 }}>{value}кг</span>

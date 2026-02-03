@@ -8,11 +8,15 @@ import Button from '../Button';
 
 import styles from './Onboarding.module.scss';
 import { PaymentSwiper } from '../PaymentSwiper/PaymentSwiper';
-import { useAuth } from '../../../context/AuthContext';
+import { useAppSelector } from '../../store/hooks';
 
 export const Onboarding = () => {
-  const { user } = useAuth();
-  const [activeIndex, setActiveIndex] = useState(user?.role !== 'guest' ? 4 : 0);
+  const { authData } = useAppSelector(state => state.auth);
+  console.log(authData);
+
+  const [activeIndex, setActiveIndex] = useState(
+    authData?.progress.has_anthropometric_data && authData.progress.has_body_photos ? 4 : 0,
+  );
   const navigate = useNavigate();
 
   const isLastSlide = activeIndex === onboardingSlides.length;
@@ -27,7 +31,7 @@ export const Onboarding = () => {
   };
 
   const finishOnboarding = () => {
-    if (user?.anamnesisCompleted && user.mainFormCompleted) {
+    if (authData?.progress.has_anthropometric_data && authData.progress.has_body_photos) {
       navigate('/');
       return;
     }

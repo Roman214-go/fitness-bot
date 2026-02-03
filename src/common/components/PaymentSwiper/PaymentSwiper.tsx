@@ -38,7 +38,7 @@ export const PaymentSwiper = () => {
       description:
         'Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptates saepe at blanditiis eum illum consectetur dolorum consequatur iure aliquid ipsum!',
       additionalInfo: ['Персональные трени', 'Еще трени', 'Силовые трени', 'Слабовые трени'],
-      price: '2999 рублей',
+      price: '2499 рублей',
     },
   ];
   return (
@@ -56,7 +56,12 @@ export const PaymentSwiper = () => {
                 <li key={i}>{list}</li>
               ))}
             </ul>
-            <p className={styles.price}>{item.price}</p>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'end', margin: '10px 0' }}>
+                <p className={styles.discount_price}>{item.price}</p>
+              </div>
+              <p className={styles.price}>{item.price}</p>
+            </div>
             <Button>Купить</Button>
           </div>
         </SwiperSlide>

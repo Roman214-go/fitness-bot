@@ -1,28 +1,26 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import Loader from '../Loader';
+// import Loader from '../Loader';
+import { useAppSelector } from '../../store/hooks';
 
 interface OnboardingGuardProps {
   children: ReactNode;
 }
 
 export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
-  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+  const { authData, userData } = useAppSelector(state => state.auth);
+  // if (isLoading) {
+  //   return <Loader />;
+  // }
 
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  if (!isAuthenticated || !user) {
+  if (!authData || !userData) {
     return <>{children}</>;
   }
 
-  const { role, mainFormCompleted, anamnesisCompleted } = user;
   const pathname = location.pathname;
 
-  if (role === 'guest') {
+  if (!userData.anthropometric_data && !userData.body_photos) {
     if (pathname !== '/main-form' && pathname !== '/anamnesis-form') {
       if (pathname !== '/onboarding') {
         return <Navigate to='/onboarding' replace />;
@@ -30,14 +28,14 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
       return <>{children}</>;
     }
 
-    if (!mainFormCompleted) {
+    if (!userData.body_photos) {
       if (pathname !== '/main-form') {
         return <Navigate to='/main-form' replace />;
       }
       return <>{children}</>;
     }
 
-    if (mainFormCompleted && !anamnesisCompleted) {
+    if (userData.body_photos && !userData.anthropometric_data) {
       if (pathname !== '/anamnesis-form') {
         return <Navigate to='/anamnesis-form' replace />;
       }

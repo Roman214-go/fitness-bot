@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BsCheck2 } from 'react-icons/bs';
-import { BsCheck2All } from 'react-icons/bs';
-
+import { BsCheck2, BsCheck2All, BsX } from 'react-icons/bs';
 import styles from './ChatPage.module.scss';
+import { useAppSelector } from '../../common/store/hooks';
 
-// Типы данных
 interface Message {
   id: string;
   text?: string;
@@ -14,94 +12,291 @@ interface Message {
   status?: 'sent' | 'delivered' | 'read';
 }
 
+const API_URL = 'http://localhost:8000';
+
 export const ChatPage: React.FC = () => {
+  const { userData } = useAppSelector(state => state.auth);
+  const [loading, setLoading] = useState(true);
+
+  const currentUser = {
+    telegram_id: userData?.telegram_id,
+    first_name: 'Test User',
+    username: null,
+    last_name: null,
+    photo_url: null,
+    language_code: 'ru',
+  };
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Integer eget tellus ultricies, feugiat mi vitae, viverra neque.',
-      sender: 'other',
-      timestamp: new Date(),
-    },
-    {
-      id: '2',
-      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      sender: 'other',
-      timestamp: new Date(),
-    },
-    {
-      id: '3',
-      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      sender: 'user',
-      timestamp: new Date(),
-      status: 'read',
-    },
-    {
-      id: '4',
-      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nulla mauris, pharetra et nibh, consectetur fringilla ligula.',
-      sender: 'other',
-      timestamp: new Date(),
-    },
-    {
-      id: '5',
-      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec molestie, lacus eu lacinia interdum.',
-      sender: 'other',
-      timestamp: new Date(),
-    },
-  ]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const [myUserId, setMyUserId] = useState<number | null>(null);
 
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const [chatId, setChatId] = useState<string | null>(null);
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: inputValue,
-      sender: 'user',
-      timestamp: new Date(),
-      status: 'sent',
+  const loadHistory = async (chatId: string, userId: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/v1/realtime-chat/${chatId}/messages`, {
+        headers: {
+          'X-Telegram-Auth': JSON.stringify(currentUser),
+        },
+      });
+
+      if (!res.ok) {
+        console.error('Ошибка загрузки истории');
+        return;
+      }
+
+      const data = await res.json();
+
+      const mapped: Message[] = data
+        .map(m => {
+          const isOwn = m.sender_id === userId;
+
+          return {
+            id: String(m.id),
+            text: m.content ?? undefined,
+            image: m.photo_url ? `${API_URL}${m.photo_url}` : undefined,
+            sender: isOwn ? 'user' : 'other',
+            timestamp: new Date(m.created_at),
+            status: 'read',
+          };
+        })
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+      setMessages(mapped);
+      setLoading(false);
+    } catch (e) {
+      console.error('loadHistory error', e);
+      setLoading(false);
+    }
+  };
+
+  /* =======================
+     Инициализация чата
+  ======================= */
+  useEffect(() => {
+    if (!userData?.subscription) return;
+    const initChat = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/v1/realtime-chat/my`, {
+          headers: {
+            'X-Telegram-Auth': JSON.stringify(currentUser),
+          },
+        });
+
+        if (!res.ok) {
+          console.error('Ошибка получения чата');
+          return;
+        }
+
+        const chat = await res.json();
+        setChatId(chat.id);
+        setMyUserId(chat.user_id);
+
+        await loadHistory(chat.id, chat.user_id);
+        setLoading(false);
+      } catch (e) {
+        console.error('initChat error', e);
+        setLoading(false);
+      }
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    initChat();
+  }, []);
+
+  /* =======================
+     SSE подключение
+  ======================= */
+  useEffect(() => {
+    if (!chatId || !userData?.subscription) return;
+
+    const token = encodeURIComponent(JSON.stringify(currentUser));
+    const es = new EventSource(`${API_URL}/api/v1/realtime-chat/${chatId}/stream?token=${token}`);
+
+    eventSourceRef.current = es;
+
+    es.onmessage = event => {
+      try {
+        let raw = event.data;
+
+        if (raw.startsWith('data: ')) {
+          raw = raw.slice(6);
+        }
+
+        const data = JSON.parse(raw);
+
+        if (data.type === 'new_message') {
+          const m = data.message;
+
+          const isOwn = m.sender.id === myUserId;
+
+          setMessages(prev => {
+            const exists = prev.some(msg => msg.id === String(m.id));
+            if (exists) return prev;
+
+            return [
+              ...prev,
+              {
+                id: String(m.id),
+                text: m.content ?? undefined,
+                image: m.photo_url ? `${API_URL}${m.photo_url}` : undefined,
+                sender: isOwn ? 'user' : 'other',
+                timestamp: new Date(m.created_at),
+                status: isOwn ? 'delivered' : undefined,
+              },
+            ];
+          });
+        }
+      } catch (e) {
+        console.error('SSE parse error:', e, event.data);
+      }
+    };
+
+    es.onerror = () => {
+      console.error('SSE disconnected');
+    };
+
+    return () => {
+      es.close();
+    };
+  }, [chatId]);
+
+  /* =======================
+     Автоскролл
+  ======================= */
+  const firstLoadRef = useRef(true);
+
+  useEffect(() => {
+    if (!messagesEndRef.current || messages.length === 0) return;
+
+    if (firstLoadRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ block: 'end' });
+        firstLoadRef.current = false;
+      }, 0);
+      return;
+    }
+
+    messagesEndRef.current.scrollIntoView({ block: 'end' });
+  }, [messages]);
+
+  /* =======================
+     Отправка текста
+  ======================= */
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || !chatId) return;
+
+    const text = inputValue;
     setInputValue('');
+
+    try {
+      await fetch(`${API_URL}/api/v1/realtime-chat/${chatId}/send/text`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Telegram-Auth': JSON.stringify(currentUser),
+        },
+        body: JSON.stringify({ content: text }),
+      });
+    } catch (e) {
+      console.error('sendMessage error', e);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter') {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  const handleAddImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /* =======================
+     Загрузка и отправка изображения
+  ======================= */
+  const handleAddImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !chatId) return;
 
     const imageUrl = URL.createObjectURL(file);
+    const tempId = Date.now().toString();
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      image: imageUrl,
-      sender: 'user',
-      timestamp: new Date(),
-      status: 'sent',
-    };
+    setMessages(prev => [
+      ...prev,
+      {
+        id: tempId,
+        image: imageUrl,
+        sender: 'user',
+        timestamp: new Date(),
+        status: 'sent',
+      },
+    ]);
 
-    setMessages(prev => [...prev, newMessage]);
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      formData.append('content', '');
 
-    // чтобы можно было загрузить то же изображение повторно
+      const res = await fetch(`${API_URL}/api/v1/realtime-chat/${chatId}/send/photo`, {
+        method: 'POST',
+        headers: {
+          'X-Telegram-Auth': JSON.stringify(currentUser),
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        console.error('Ошибка отправки фото');
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      } else {
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      }
+    } catch (e) {
+      console.error('handleAddImage error', e);
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+    }
+
     e.target.value = '';
   };
 
+  /* =======================
+     Открытие фото в полном размере
+  ======================= */
+  const handleImageClick = (imageUrl: string) => {
+    setFullscreenImage(imageUrl);
+  };
+
+  const closeFullscreenImage = () => {
+    setFullscreenImage(null);
+  };
+
+  // Закрытие по Escape
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'end',
-    });
-  }, [messages]);
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && fullscreenImage) {
+        closeFullscreenImage();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [fullscreenImage]);
+
+  /* =======================
+     JSX
+  ======================= */
+  if (loading) {
+    return (
+      <div className={styles.chat_container}>
+        <div className={styles.header}>Чат</div>
+        <div className={styles.loading}>Загрузка пользователя...</div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.chat_container}>
@@ -113,13 +308,21 @@ export const ChatPage: React.FC = () => {
             {msg.sender === 'other' && <div className={styles.avatar} />}
 
             <div className={`${styles.message} ${msg.sender === 'user' ? styles.user : styles.other}`}>
-              {msg.text && <span>{msg.text}</span>}
+              {msg.text ? <span>{msg.text}</span> : null}
 
-              {msg.image && <img src={msg.image} alt='uploaded' className={styles.message_image} />}
+              {msg.image ? (
+                <img
+                  src={msg.image}
+                  alt='uploaded'
+                  className={styles.message_image}
+                  onClick={() => handleImageClick(msg.image!)}
+                  style={{ cursor: 'pointer' }}
+                />
+              ) : null}
 
               {msg.sender === 'user' && msg.status && (
                 <span className={`${styles.message_status} ${msg.status === 'read' ? styles.read : styles.sent}`}>
-                  {msg.status === 'read' ? <BsCheck2All fontSize={16} /> : <BsCheck2 fontSize={16} />}
+                  {msg.status === 'read' ? <BsCheck2All size={16} /> : <BsCheck2 size={16} />}
                 </span>
               )}
             </div>
@@ -134,6 +337,7 @@ export const ChatPage: React.FC = () => {
         </button>
 
         <input ref={fileInputRef} type='file' accept='image/*' hidden onChange={handleAddImage} />
+
         <input
           type='text'
           placeholder='Сообщение'
@@ -155,6 +359,21 @@ export const ChatPage: React.FC = () => {
           </svg>
         </button>
       </div>
+
+      {/* Модальное окно для просмотра фото */}
+      {fullscreenImage && (
+        <div className={styles.fullscreen_overlay} onClick={closeFullscreenImage}>
+          <button className={styles.close_button} onClick={closeFullscreenImage}>
+            <BsX size={32} />
+          </button>
+          <img
+            src={fullscreenImage}
+            alt='fullscreen'
+            className={styles.fullscreen_image}
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };

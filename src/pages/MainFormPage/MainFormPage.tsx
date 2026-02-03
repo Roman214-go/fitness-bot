@@ -1,46 +1,89 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import styles from './MainFormPage.module.scss';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../common/components/Button';
+import { postPhysicalData } from './api/postPhysicalData';
+import { setUserData } from '../../common/auth/authSlice';
+import { axiosInstance } from '../../common/utils/axiosInstance';
+import { useAppDispatch, useAppSelector } from '../../common/store/hooks';
 
-interface FormValues {
-  gender: string;
-  height: string;
-  weight: string;
-  age: string;
-  goals: string[];
-  trainingFormat: string[];
-  trainersCount: string;
-  experience: string;
-  healthRestrictions: string;
-  physicalActivity: string;
+export type Gender = 'M' | 'F';
+
+export type DailyStepsLevel = 'SEDENTARY' | 'LIGHT' | 'MODERATE' | 'ACTIVE' | 'VERY_ACTIVE';
+
+export type ExperienceLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+
+export type Goal = 'weight_loss' | 'muscle_gain' | 'maintain_form' | 'posture_correction' | 'back_pain_relief';
+
+export type WorkoutFormat = 'home' | 'gym';
+
+export interface MainFormValues {
+  height: string | number;
+  weight: string | number;
+  age: string | number;
+
+  gender: Gender;
+  health_limitation: string;
+
+  daily_steps_level: DailyStepsLevel;
+  experience_level: ExperienceLevel;
+  goal: Goal;
+  healthy_goal: string[];
+  workout_format: WorkoutFormat;
+
+  workouts_per_week: string;
+
   photos: {
-    front: File | null;
-    side: File | null;
-    frontFull: File | null;
-    sideFull: File | null;
+    front_photo: File | null;
+    back_photo: File | null;
+    left_front_photo: File | null;
+    left_incline_photo: File | null;
   };
+  agreePrivacy: boolean;
 }
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const goalsArray = [
+  {
+    value: 'weight_loss',
+    title: 'Похудение',
+  },
+  {
+    value: 'muscle_gain',
+    title: 'Набор мышечной массы',
+  },
+  {
+    value: 'maintain_form',
+    title: 'Поддержание формы',
+  },
+];
 
 export const MainFormPage = () => {
   const navigate = useNavigate();
-  const initialValues: FormValues = {
-    gender: '',
+  const { userData } = useAppSelector(state => state.auth);
+
+  const dispatch = useAppDispatch();
+
+  const initialValues: MainFormValues = {
+    gender: 'M',
     height: '',
     weight: '',
     age: '',
-    goals: [],
-    trainingFormat: [],
-    trainersCount: '',
-    experience: '',
-    healthRestrictions: '',
-    physicalActivity: '',
+    goal: 'maintain_form',
+    healthy_goal: [],
+    workout_format: 'home',
+    workouts_per_week: '',
+    experience_level: 'BEGINNER',
+    health_limitation: '',
+    daily_steps_level: 'SEDENTARY',
+    agreePrivacy: false,
+
     photos: {
-      front: null,
-      side: null,
-      frontFull: null,
-      sideFull: null,
+      front_photo: null,
+      back_photo: null,
+      left_incline_photo: null,
+      left_front_photo: null,
     },
   };
 
@@ -61,32 +104,41 @@ export const MainFormPage = () => {
       .matches(/^\d+$/, 'Возраст должен содержать только цифры')
       .test('min', 'Возраст должен быть больше 14 лет', val => !val || parseInt(val) >= 14)
       .test('max', 'Возраст должен быть меньше 100 лет', val => !val || parseInt(val) <= 100),
-    goals: Yup.array().min(1, 'Выберите хотя бы одну цель'),
-    trainingFormat: Yup.array().min(1, 'Выберите формат тренировок'),
-    trainersCount: Yup.string().required('Выберите количество тренировок'),
-    experience: Yup.string().required('Выберите опыт тренировок'),
-    physicalActivity: Yup.string().required('Выберите уровень активности'),
+    goal: Yup.string().required('Выберите цель тренировок'),
+    workout_format: Yup.string().required('Выберите формат тренировок'),
+    workouts_per_week: Yup.string().required('Выберите количество тренировок'),
+    experience_level: Yup.string().required('Выберите опыт тренировок'),
+    daily_steps_level: Yup.string().required('Выберите уровень активности'),
+    agreePrivacy: Yup.boolean().oneOf([true], 'Необходимо принять политику конфиденциальности').required(),
   });
 
-  const handleSubmit = (values: FormValues) => {
+  const handleSubmit = async (values: MainFormValues) => {
+    if (userData?.telegram_id) {
+      await postPhysicalData(values, userData?.telegram_id);
+    }
+
+    const res = await axiosInstance.get(`/users/telegram/${userData?.telegram_id}`, {
+      params: { include_relations: true },
+    });
+
+    dispatch(setUserData(res.data));
+
     navigate('/anamnesis-form');
     console.log('post values:', values);
   };
 
   const handlePhotoUpload = (
-    photoType: keyof FormValues['photos'],
+    photoType: keyof MainFormValues['photos'],
     event: React.ChangeEvent<HTMLInputElement>,
     setFieldValue: (field: string, value: unknown) => void,
   ) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Проверка размера файла (максимум 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('Размер файла не должен превышать 5MB');
         return;
       }
 
-      // Проверка типа файла
       if (!file.type.startsWith('image/')) {
         alert('Можно загружать только изображения');
         return;
@@ -112,11 +164,11 @@ export const MainFormPage = () => {
             <label className={styles.formLabel}>Пол</label>
             <div className={styles.radioGroup}>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='gender' value='Мужской' />
+                <Field type='radio' name='gender' value='M' />
                 <span>Мужской</span>
               </label>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='gender' value='Женский' />
+                <Field type='radio' name='gender' value='F' />
                 <span>Женский</span>
               </label>
             </div>
@@ -160,81 +212,97 @@ export const MainFormPage = () => {
           </div>
 
           {/* Цель тренировок */}
-          <div className={`${styles.formSection} ${errors.goals && touched.goals ? styles.hasError : ''}`}>
+          <div className={`${styles.formSection} ${errors.goal && touched.goal ? styles.hasError : ''}`}>
             <label className={styles.formLabel}>Цель тренировок</label>
-            <div className={styles.checkboxGroup}>
-              {[
-                'похудение',
-                'набор мышечной массы',
-                'исправление осанки',
-                'поддержание формы',
-                'снятие боли в спине (устранение миофасциального синдрома)',
-              ].map(goal => (
-                <label key={goal} className={styles.checkboxLabel}>
-                  <Field type='checkbox' name='goals' value={goal} />
-                  <span>{goal}</span>
+            <div className={styles.radioGroup}>
+              {goalsArray.map((item, index) => (
+                <label key={index} className={styles.radioLabel}>
+                  <Field type='radio' name='goal' value={item.value} />
+                  <span>{item.title}</span>
                 </label>
               ))}
             </div>
-            <ErrorMessage name='goals' component='div' className={styles.error} />
+
+            <ErrorMessage name='goal' component='div' className={styles.error} />
+          </div>
+
+          {/* Оздоровительные цели  */}
+          <div className={`${styles.formSection} ${errors.goal && touched.goal ? styles.hasError : ''}`}>
+            <label className={styles.formLabel}>Дополнительные задачи</label>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <Field type='checkbox' name='healthy_goal' value={'posture_correction'} />
+                <span>Исправление осанки</span>
+              </label>
+              <label className={styles.radioLabel}>
+                <Field type='checkbox' name='healthy_goal' value={'back_pain_relief'} />
+                <span>Снятие боли в спине (устранение миофасциального синдрома)</span>
+              </label>
+            </div>
+
+            <ErrorMessage name='goal' component='div' className={styles.error} />
           </div>
 
           {/* Формат тренировок */}
           <div
-            className={`${styles.formSection} ${errors.trainingFormat && touched.trainingFormat ? styles.hasError : ''}`}
+            className={`${styles.formSection} ${errors.workout_format && touched.workout_format ? styles.hasError : ''}`}
           >
             <label className={styles.formLabel}>Формат тренировок</label>
-            <div className={styles.checkboxGroup}>
-              {['Тренировка дома', 'Тренировка в спортзале'].map(format => (
-                <label key={format} className={styles.checkboxLabel}>
-                  <Field type='checkbox' name='trainingFormat' value={format} />
-                  <span>{format}</span>
-                </label>
-              ))}
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <Field type='radio' name='workout_format' value='home' />
+                <span>Тренировка дома</span>
+              </label>
+              <label className={styles.radioLabel}>
+                <Field type='radio' name='workout_format' value='gym' />
+                <span>Тренировка в спортзале</span>
+              </label>
             </div>
-            <ErrorMessage name='trainingFormat' component='div' className={styles.error} />
+            <ErrorMessage name='workout_format' component='div' className={styles.error} />
           </div>
 
           {/* Количество тренировок в неделю */}
           <div
-            className={`${styles.formSection} ${errors.trainersCount && touched.trainersCount ? styles.hasError : ''}`}
+            className={`${styles.formSection} ${errors.workouts_per_week && touched.workouts_per_week ? styles.hasError : ''}`}
           >
             <label className={styles.formLabel}>Количество тренировок в неделю</label>
             <div className={styles.radioGroup}>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='trainersCount' value='2' />
+                <Field type='radio' name='workouts_per_week' value='2' />
                 <span>2</span>
               </label>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='trainersCount' value='3' />
+                <Field type='radio' name='workouts_per_week' value='3' />
                 <span>3</span>
               </label>
             </div>
-            <ErrorMessage name='trainersCount' component='div' className={styles.error} />
+            <ErrorMessage name='workouts_per_week' component='div' className={styles.error} />
           </div>
 
           {/* Опыт тренировок */}
-          <div className={`${styles.formSection} ${errors.experience && touched.experience ? styles.hasError : ''}`}>
+          <div
+            className={`${styles.formSection} ${errors.experience_level && touched.experience_level ? styles.hasError : ''}`}
+          >
             <label className={styles.formLabel}>Опыт тренировок</label>
             <div className={styles.radioGroup}>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='experience' value='до года' />
+                <Field type='radio' name='experience_level' value='BEGINNER' />
                 <span>до года</span>
               </label>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='experience' value='от 1 года до 2-х' />
+                <Field type='radio' name='experience_level' value='INTERMEDIATE' />
                 <span>от 1 года до 2-х</span>
               </label>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='experience' value='от 2-х до 3-ех лет' />
+                <Field type='radio' name='experience_level' value='ADVANCED' />
                 <span>от 2-х до 3-ех лет</span>
               </label>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='experience' value='более 3-ех лет' />
+                <Field type='radio' name='experience_level' value='EXPERT' />
                 <span>более 3-ех лет</span>
               </label>
             </div>
-            <ErrorMessage name='experience' component='div' className={styles.error} />
+            <ErrorMessage name='experience_level' component='div' className={styles.error} />
           </div>
 
           {/* Ограничения по здоровью */}
@@ -242,7 +310,7 @@ export const MainFormPage = () => {
             <label className={styles.formLabel}>Ограничения по здоровью (необязательно)</label>
             <Field
               as='textarea'
-              name='healthRestrictions'
+              name='health_limitation'
               placeholder='Опишите имеющиеся травмы, заболевания или другие ограничения'
               className={styles.textareaField}
               rows={4}
@@ -251,18 +319,28 @@ export const MainFormPage = () => {
 
           {/* Физическая активность */}
           <div
-            className={`${styles.formSection} ${errors.physicalActivity && touched.physicalActivity ? styles.hasError : ''}`}
+            className={`${styles.formSection} ${errors.daily_steps_level && touched.daily_steps_level ? styles.hasError : ''}`}
           >
             <label className={styles.formLabel}>Двигательная активность</label>
             <div className={styles.radioGroup}>
-              {['До 5000 шагов', '5000-8000 шагов', '8000-12000 шагов', '12000 шагов и более'].map(activity => (
-                <label key={activity} className={styles.radioLabel}>
-                  <Field type='radio' name='physicalActivity' value={activity} />
-                  <span>{activity}</span>
-                </label>
-              ))}
+              <label className={styles.radioLabel}>
+                <Field type='radio' name='daily_steps_level' value='SEDENTARY' />
+                <span>До 5000 шагов</span>
+              </label>
+              <label className={styles.radioLabel}>
+                <Field type='radio' name='daily_steps_level' value='LIGHT' />
+                <span>5000–8000 шагов</span>
+              </label>
+              <label className={styles.radioLabel}>
+                <Field type='radio' name='daily_steps_level' value='MODERATE' />
+                <span>8000–12000 шагов</span>
+              </label>
+              <label className={styles.radioLabel}>
+                <Field type='radio' name='daily_steps_level' value='VERY_ACTIVE' />
+                <span>12000 шагов и более</span>
+              </label>
             </div>
-            <ErrorMessage name='physicalActivity' component='div' className={styles.error} />
+            <ErrorMessage name='daily_steps_level' component='div' className={styles.error} />
           </div>
 
           {/* Вставить фото */}
@@ -271,7 +349,7 @@ export const MainFormPage = () => {
             <div className={styles.photoGrid}>
               {[
                 {
-                  key: 'front',
+                  key: 'front_photo',
                   label: 'спереди',
                   code: (
                     <svg width='58' height='140' viewBox='0 0 58 140' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -283,7 +361,7 @@ export const MainFormPage = () => {
                   ),
                 },
                 {
-                  key: 'side',
+                  key: 'back_photo',
                   label: 'сзади',
                   code: (
                     <svg width='59' height='140' viewBox='0 0 59 140' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -295,7 +373,7 @@ export const MainFormPage = () => {
                   ),
                 },
                 {
-                  key: 'frontFull',
+                  key: 'left_front_photo',
                   label: 'левый бок',
                   code: (
                     <svg width='30' height='140' viewBox='0 0 30 140' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -311,7 +389,7 @@ export const MainFormPage = () => {
                   ),
                 },
                 {
-                  key: 'sideFull',
+                  key: 'left_incline_photo',
                   label: 'левый бок в наклоне',
                   code: (
                     <svg width='71' height='121' viewBox='0 0 71 121' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -323,7 +401,7 @@ export const MainFormPage = () => {
                   ),
                 },
               ].map(item => {
-                const photoKey = item.key as keyof FormValues['photos'];
+                const photoKey = item.key as keyof MainFormValues['photos'];
                 const preview = getPhotoPreview(values.photos[photoKey]);
 
                 return (
@@ -349,6 +427,23 @@ export const MainFormPage = () => {
                 );
               })}
             </div>
+          </div>
+
+          {/* Согласие с политикой конфиденциальности */}
+          <div
+            className={`${styles.formSection} ${errors.agreePrivacy && touched.agreePrivacy ? styles.hasError : ''}`}
+          >
+            <label className={styles.radioLabel} style={{ background: '#1e1e1e', boxShadow: 'none' }}>
+              <Field type='checkbox' name='agreePrivacy' />
+              <span>
+                Я даю согласие на обработку моих персональных данных в соответствии с{' '}
+                <Link to='/privacy' style={{ textDecoration: 'underline' }}>
+                  Политикой конфиденциальности
+                </Link>
+              </span>
+            </label>
+
+            <ErrorMessage name='agreePrivacy' component='div' className={styles.error} />
           </div>
 
           <Button type='submit'>Далее</Button>

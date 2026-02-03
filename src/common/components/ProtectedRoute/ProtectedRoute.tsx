@@ -1,20 +1,11 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
+import { useAppSelector } from '../../store/hooks';
 
-interface ProtectedRouteProps {
-  requirePremium?: boolean;
-  redirectTo?: string;
-}
+export const ProtectedRoute = () => {
+  const { userData } = useAppSelector(state => state.auth);
 
-export const ProtectedRoute = ({ requirePremium = false }: ProtectedRouteProps) => {
-  const { isAuthenticated, isPremium } = useAuth();
-
-  if (!isAuthenticated) {
+  if (userData?.anthropometric_data && userData.body_photos) {
     return <Navigate to='/' replace />;
-  }
-
-  if (requirePremium && !isPremium) {
-    return <Navigate to='/subscription' replace />;
   }
 
   return <Outlet />;

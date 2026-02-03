@@ -1,37 +1,55 @@
-import React, { useState } from 'react';
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React from 'react';
 import { MdArrowBackIos } from 'react-icons/md';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import styles from './TrainingPage.module.scss';
-import { useNavigate } from 'react-router-dom';
 import Button from '../../common/components/Button';
+import { useGetWorkoutByDateQuery } from './api/getTrainee';
 
-interface Exercise {
+interface ExerciseView {
   id: number;
   name: string;
-  color?: string;
-  reps?: number;
+  reps: number;
+  color: string;
 }
 
 export const TrainingPage: React.FC = () => {
+  console.log('TRAINING PAGE MOUNTED');
+
   const navigate = useNavigate();
-  const [exercises] = useState<Exercise[]>([
-    { id: 1, name: 'Сгибание рук с гантелями', color: '#B3A0FF' },
-    { id: 2, name: 'Жим штанги лёжа', color: '#B3A0FF' },
-    { id: 3, name: 'Разведение гантелей на наклонной скамье 45', color: '#B3A0FF' },
-    { id: 4, name: 'Молоты' },
-    { id: 5, name: 'Горизонтальный жим сидя в рычажном тренажёре' },
-    { id: 6, name: 'Жим в наклоне' },
-    { id: 7, name: 'Гиперэкстензия повышена' },
-  ]);
+  const { date } = useParams<{ date: string }>();
+  console.log(date);
+
+  const { data, isLoading, isError } = useGetWorkoutByDateQuery(date!);
+
+  if (isLoading) {
+    return <div className={styles.container}>Загрузка...</div>;
+  }
+
+  if (isError || !data?.length) {
+    return <div className={styles.container}>Тренировка не найдена</div>;
+  }
+
+  const workout = data[0];
+
+  const exercises: ExerciseView[] =
+    workout.personal_sets?.flatMap((set: any) =>
+      set.personal_exercises.map((ex: any) => ({
+        id: ex.id,
+        name: ex.name,
+        reps: ex.reps,
+        color: set.color_code,
+      })),
+    ) ?? [];
 
   const handleStartTraining = () => {
-    navigate('/workout');
+    navigate(`/workout/${date}`, { state: { workout } });
   };
 
-  const handleSkipTraining = () => {
-    console.log('Пропустить тренировку');
-  };
+  if (!workout) {
+    return <div className={styles.container}>Нет тренировки</div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -39,32 +57,27 @@ export const TrainingPage: React.FC = () => {
         <button className={styles.backButton} onClick={() => navigate(-1)}>
           <MdArrowBackIos />
         </button>
+
         <h1 className={styles.title}>Упражнения</h1>
+
         <span className={styles.time}>00:00</span>
       </header>
 
       <div className={styles.content}>
         <p className={styles.repeatCount}>
-          Количество повторений: <span style={{ color: '#c4ff4d' }}>20</span>
+          Количество повторений: <span style={{ color: '#c4ff4d' }}>{workout.repetitions}</span>
         </p>
 
         <div className={styles.exerciseList}>
-          {exercises.map(exercise => (
-            <div
-              key={exercise.id}
-              className={styles.exerciseCard}
-              style={{ borderColor: exercise.color, color: exercise.color }}
-            >
-              {exercise.name}
+          {exercises.map(ex => (
+            <div key={ex.id} className={styles.exerciseCard} style={{ borderColor: ex.color, color: ex.color }}>
+              {ex.name}
             </div>
           ))}
         </div>
 
         <div className={styles.buttonGroup}>
           <Button onClick={handleStartTraining}>Начать тренировку</Button>
-          <Button buttonType='secondary' onClick={handleSkipTraining}>
-            Пропустить тренировку
-          </Button>
         </div>
       </div>
     </div>

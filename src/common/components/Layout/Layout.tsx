@@ -5,7 +5,7 @@ import { FiAward } from 'react-icons/fi';
 import { GoPerson } from 'react-icons/go';
 import { FiHome } from 'react-icons/fi';
 import { MdCalendarToday } from 'react-icons/md';
-import { IoChatbubblesSharp } from 'react-icons/io5';
+import { IoChatbubblesOutline } from 'react-icons/io5';
 
 import styles from './Layout.module.scss';
 
@@ -41,7 +41,7 @@ export const Layout = () => {
         </NavLink>
 
         <NavLink to='/chat' className={({ isActive }) => (isActive ? styles.active : '')}>
-          <IoChatbubblesSharp />
+          <IoChatbubblesOutline />
           <span className={styles.label}>Чат</span>
         </NavLink>
 

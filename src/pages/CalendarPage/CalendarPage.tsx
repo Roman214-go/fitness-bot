@@ -3,16 +3,35 @@ import { ChevronLeft, ChevronRight, Dumbbell } from 'lucide-react';
 import Button from '../../common/components/Button';
 import { HiddenText } from '../../common/components/HiddenText/HiddenText';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useAppSelector } from '../../common/store/hooks';
+import { axiosInstance } from '../../common/utils/axiosInstance';
+import { ToastContainer, toast } from 'react-toastify';
 
-type WorkoutStatus = 'planned' | 'completed' | 'last' | 'rest' | 'not_completed';
+type WorkoutStatus = 'planned' | 'completed' | 'last' | 'rest' | 'not_completed' | 'recommended';
 
 interface DayData {
   date: number;
+  fullDate?: string;
   status: WorkoutStatus | null;
 }
 
+interface WorkoutDate {
+  scheduled_date: string;
+  status: string;
+  completed_at: string | null;
+  is_recommended: boolean;
+}
+
+interface PersonalWorkout {
+  workout_dates: WorkoutDate[];
+}
+
 export const CalendarPage: React.FC = () => {
-  const [currentMonth, setCurrentMonth] = useState(new Date(2024, 0, 1));
+  const [workouts, setWorkouts] = useState<PersonalWorkout[]>([]);
+  const { userData } = useAppSelector(state => state.auth);
+
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const navigate = useNavigate();
 
@@ -32,6 +51,59 @@ export const CalendarPage: React.FC = () => {
     'Декабрь',
   ];
 
+  const mapBackendStatus = (d: WorkoutDate): WorkoutStatus => {
+    const today = new Date();
+    const workoutDate = new Date(d.scheduled_date);
+
+    if (d.status === 'completed') return 'completed';
+
+    if (d.is_recommended) return 'recommended';
+
+    if (workoutDate < today && d.completed_at === null) return 'not_completed';
+
+    return 'planned';
+  };
+
+  const getEndOfCurrentWeek = () => {
+    const now = new Date();
+    const day = now.getDay() || 7;
+    const diff = 7 - day;
+
+    const end = new Date(now);
+    end.setDate(now.getDate() + diff);
+    end.setHours(23, 59, 59, 999);
+
+    return end;
+  };
+
+  const workoutMap = React.useMemo(() => {
+    const map: Record<string, WorkoutStatus> = {};
+
+    const allDates: string[] = [];
+
+    workouts.forEach(w =>
+      w.workout_dates.forEach(d => {
+        allDates.push(d.scheduled_date);
+      }),
+    );
+
+    const lastDate = allDates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+
+    workouts.forEach(w =>
+      w.workout_dates.forEach(d => {
+        let status = mapBackendStatus(d);
+
+        if (d.scheduled_date === lastDate) {
+          status = 'last';
+        }
+
+        map[d.scheduled_date] = status;
+      }),
+    );
+
+    return map;
+  }, [workouts]);
+
   const generateCalendarDays = (): DayData[] => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -48,26 +120,13 @@ export const CalendarPage: React.FC = () => {
       days.push({ date: 0, status: null });
     }
 
-    const workoutDays: { [key: number]: WorkoutStatus } = {
-      1: 'planned',
-      3: 'planned',
-      5: 'planned',
-      8: 'planned',
-      10: 'planned',
-      12: 'planned',
-      15: 'not_completed',
-      17: 'completed',
-      19: 'completed',
-      22: 'completed',
-      24: 'completed',
-      26: 'completed',
-      29: 'last',
-    };
-
     for (let i = 1; i <= daysInMonth; i++) {
+      const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+
       days.push({
         date: i,
-        status: workoutDays[i] || null,
+        fullDate,
+        status: workoutMap[fullDate] || null,
       });
     }
 
@@ -77,9 +136,19 @@ export const CalendarPage: React.FC = () => {
   const days = generateCalendarDays();
 
   const handleDayClick = (day: DayData) => {
-    if (day.status === 'planned' && day.date > 0) {
+    if (!day.fullDate) return;
+
+    const workoutDate = new Date(day.fullDate);
+    const endOfWeek = getEndOfCurrentWeek();
+
+    const isAllowed =
+      workoutDate <= endOfWeek && (day.status === 'planned' || day.status === 'recommended' || day.status === 'last');
+
+    if (isAllowed) {
       setSelectedDay(day.date);
-      navigate('/trainee');
+      navigate(`/training/${day.fullDate}`);
+    } else if (day.status === 'planned' || day.status === 'recommended') {
+      toast.error('Выберете тренировку на этой неделе');
     }
   };
 
@@ -104,10 +173,37 @@ export const CalendarPage: React.FC = () => {
         return `${baseClass} ${baseClass}--last`;
       case 'not_completed':
         return `${baseClass} ${baseClass}--not_completed`;
+      case 'recommended':
+        return `${baseClass} ${baseClass}--recommended`;
       default:
         return baseClass;
     }
   };
+
+  const handleHomework = () => {
+    navigate('/homework');
+  };
+
+  useEffect(() => {
+    const fetchWorkouts = async () => {
+      if (!userData?.telegram_id || !userData?.subscription) return;
+
+      try {
+        const res = await axiosInstance.get('/personal-workout-plans/my/workouts', {
+          headers: {
+            accept: 'application/json',
+            'X-Telegram-Auth': JSON.stringify({ telegram_id: userData.telegram_id }),
+          },
+        });
+        setWorkouts(res.data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        console.error(err);
+      }
+    };
+
+    fetchWorkouts();
+  }, [userData?.telegram_id]);
 
   return (
     <div className='workout-calendar'>
@@ -143,7 +239,7 @@ export const CalendarPage: React.FC = () => {
         ))}
       </div>
       <div style={{ margin: '10px 0' }}>
-        <HiddenText text='Информаци про календарь' />
+        <HiddenText text='Для перехода на тренировку, нажмите на день с запланированной или рекомендуемой тренировкой' />
       </div>
       <div className='legend'>
         <div className='legend-item'>
@@ -165,22 +261,23 @@ export const CalendarPage: React.FC = () => {
           <span>Незавершенная тренировка</span>
         </div>
         <div className='legend-item'>
+          <div className='legend-icon legend-icon--recommended'>
+            <Dumbbell size={16} />
+          </div>
+          <span>Рекомендуемая к прохождению тренировка</span>
+        </div>
+        <div className='legend-item'>
           <div className='legend-icon legend-icon--last'>
             <Dumbbell size={16} />
           </div>
-          <span>Last тренировка</span>
+          <span>Последняя тренировка</span>
         </div>
         <div className='legend-item'>
           <div className='legend-icon legend-icon--rest'></div>
           <span>Выходной день</span>
         </div>
-        <Button
-          onClick={() => {
-            console.log(selectedDay);
-          }}
-        >
-          Домашнее задание
-        </Button>
+        <Button onClick={handleHomework}>Домашнее задание</Button>
+        <ToastContainer theme='light' hideProgressBar autoClose={3000} style={{ position: 'absolute' }} />
       </div>
 
       <style>{`
@@ -275,7 +372,7 @@ export const CalendarPage: React.FC = () => {
         }
         
         .calendar-day--not_completed {
-          background-color: #fe003f;
+          background-color: #666666;
           cursor: default;
         }
         
@@ -297,6 +394,11 @@ export const CalendarPage: React.FC = () => {
         .calendar-day--last {
           background-color: #fbbf24;
           color: #1a1a1a;
+        }
+
+        .calendar-day--recommended {
+          background-color: #666666;
+          border: 2px solid orange;
         }
 
         .day-number {
@@ -358,12 +460,17 @@ export const CalendarPage: React.FC = () => {
           border: 2px solid #1b8600;
         }
         .legend-icon--not_completed {
-          background-color: #fe003f;
+          background-color: #666666;
         }
 
         .legend-icon--last {
           background-color: #fbbf24;
           color: #1a1a1a;
+        }
+
+        .legend-icon--recommended {
+          background-color: #666666;
+          border: 2px solid orange;
         }
 
         .legend-icon--rest {

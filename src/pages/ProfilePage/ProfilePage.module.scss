@@ -4,9 +4,8 @@
 
 .profilePage {
   padding-top: 20px;
-  background: linear-gradient(180deg, #896cfe 0%, #1a1a1a 10%);
+  background: linear-gradient(180deg, #672dca 0%, #1a1a1a 10%);
   color: #fff;
-  padding-bottom: 80px;
 }
 
 .profileContent {
@@ -36,6 +35,13 @@
   border-radius: 50%;
   background: #666;
   border: 3px solid white;
+}
+
+.avatarImage {
+  border: 3px solid white;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
 }
 
 .editAvatar {
@@ -173,5 +179,82 @@
   &_title {
     font-size: 20px;
     margin: 30px 0 10px;
+  }
+}
+
+.coach_speech {
+  text-align: center;
+  background-color: #666;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  flex-direction: column;
+  align-items: center;
+  background: #1e1e1e;
+  border-radius: 20px;
+  padding: 24px;
+  width: 540px;
+  height: 80vh;
+  text-align: center;
+  color: white;
+  p {
+    text-align: start;
+  }
+  scrollbar-width: thin; // Firefox
+  scrollbar-color: #2a2a2a transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #2a2a2a;
+    border-radius: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #3a3a3a;
+  }
+}
+
+@media (max-width: 628px) {
+  .overlay {
+    position: fixed;
+  }
+  .modal {
+    position: fixed;
+    display: flex;
+    top: 10vh;
+    overflow-x: auto;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    background: #1e1e1e;
+    border-radius: 20px;
+    overflow-x: auto;
+    padding: 24px;
+    width: 80%;
+    height: 80vh;
+    text-align: center;
+    color: white;
   }
 }

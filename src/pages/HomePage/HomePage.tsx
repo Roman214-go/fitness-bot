@@ -1,17 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import { CalorieChart } from '../../common/components/CalorieChart/CalorieChart';
-import { useAuth } from '../../context/AuthContext';
 
 import styles from './HomePage.module.scss';
+import { useAppSelector } from '../../common/store/hooks';
 
 const HomePage = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  console.log(user?.role);
+  const { userData } = useAppSelector(state => state.auth);
+
   const segments = [
-    { id: 1, value: 100, color: '#2563EB', label: 'Белки' },
-    { id: 2, value: 50, color: '#F59E0B', label: 'Жиры' },
-    { id: 3, value: 200, color: '#10B981', label: 'Углеводы' },
+    { id: 1, value: userData?.nutrition.proteins, color: '#2563EB', label: 'Белки' },
+    { id: 2, value: userData?.nutrition.fats, color: '#F59E0B', label: 'Жиры' },
+    { id: 3, value: userData?.nutrition.carbohydrates, color: '#10B981', label: 'Углеводы' },
   ];
 
   return (
@@ -23,7 +23,7 @@ const HomePage = () => {
           <p>Ближайшая тренировка дд.мм.гггг</p>
         </div>
       </div>
-      <CalorieChart totalCalories={2500} segments={segments} />
+      <CalorieChart totalCalories={userData?.nutrition.calories} segments={segments} />
     </div>
   );
 };

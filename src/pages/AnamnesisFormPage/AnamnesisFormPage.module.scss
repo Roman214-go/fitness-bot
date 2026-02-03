@@ -55,7 +55,7 @@ input[type='checkbox'] {
   height: 20px;
   cursor: pointer;
   margin: 0;
-  accent-color: #896cfe;
+  accent-color: #672dca;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -64,11 +64,11 @@ input[type='checkbox'] {
   background-color: white;
   position: relative;
   transition: all 0.2s;
-  border-color: #896cfe;
+  border-color: #672dca;
 
   &:checked {
-    background-color: #896cfe;
-    border-color: #896cfe;
+    background-color: #672dca;
+    border-color: #672dca;
 
     &::after {
       content: '✓';

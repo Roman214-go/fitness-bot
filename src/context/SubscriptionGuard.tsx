@@ -1,24 +1,19 @@
 import { ReactNode } from 'react';
-import { useAuth } from './AuthContext';
 import { Paywall } from '../common/components/Paywall/Paywall';
+import { useAppSelector } from '../common/store/hooks';
 
 type Props = {
   children: ReactNode;
 };
 
 export const SubscriptionGuard = ({ children }: Props) => {
-  const { isPremium, isLoading, isAuthenticated } = useAuth();
-  console.log(isPremium);
-
-  if (isLoading) return null;
-
-  // гость — не показываем paywall, этим занимается Auth / Onboarding
-  if (!isAuthenticated) return <>{children}</>;
+  const { authData, userData } = useAppSelector(state => state.auth);
+  if (!authData) return <>{children}</>;
 
   return (
     <>
       {children}
-      {!isPremium && <Paywall />}
+      {(!userData?.subscription || userData.subscription === 'in progress') && <Paywall />}
     </>
   );
 };

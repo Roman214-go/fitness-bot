@@ -30,7 +30,7 @@ export const HiddenText = ({ text }: IHiddenText) => {
 
       <div
         style={{
-          maxHeight: open ? '200px' : '0',
+          maxHeight: open ? '11200px' : '0',
           overflow: 'hidden',
           transition: 'max-height 0.3s ease',
           marginTop: '8px',
