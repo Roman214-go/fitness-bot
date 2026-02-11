@@ -52,7 +52,7 @@ export const WorkoutPage: React.FC = () => {
   const [timer, setTimer] = useState<number>(0);
   const [currentSetIndex, setCurrentSetIndex] = useState<number>(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number>(0);
-  const [weight, setWeight] = useState<string | null>('');
+  const [weight, setWeight] = useState<string>('');
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
 
   const currentSet = workout.personal_sets[currentSetIndex];
@@ -238,12 +238,10 @@ export const WorkoutPage: React.FC = () => {
           <div className={styles.weightInput}>
             <input
               type='number'
-              min='0'
-              step='0.5'
-              placeholder='Введите вес, кг'
+              min={0}
+              step={0.5}
               value={weight}
-              onChange={e => setWeight(e.target.value)}
-              className={styles.input}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWeight(e.currentTarget.value)}
             />
           </div>
         </div>
