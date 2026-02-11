@@ -25,7 +25,6 @@ export const WeightPrediction = ({ value }: Props) => {
         {Array.from({ length: ticks }).map((_, i) => {
           const isCenter = i === ticks / 2;
           const isSide = i === 10 || i === 30;
-          console.log(i, ticks);
 
           return (
             <div

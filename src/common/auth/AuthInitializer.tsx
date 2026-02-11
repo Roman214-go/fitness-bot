@@ -20,16 +20,14 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
 
       try {
         const authResponse = await verifyAuth({
-          telegram_id: 739771074,
-          username: telegramUser?.username ?? '',
-          first_name: telegramUser?.first_name ?? '',
-          last_name: telegramUser?.last_name ?? '',
-          photo_url: telegramUser?.photo_url ?? '',
+          telegram_id: 739771071,
+          username: telegramUser?.username ?? 'User',
+          first_name: telegramUser?.first_name ?? 'Name',
+          last_name: telegramUser?.last_name ?? 'Surname',
           language_code: telegramUser?.language_code ?? 'ru',
         }).unwrap();
 
         dispatch(setAuthData(authResponse));
-        console.log('res data', authResponse.user.telegram_id);
 
         const res = await axiosInstance.get(`/users/telegram/${authResponse.user.telegram_id}`, {
           params: { include_relations: true },

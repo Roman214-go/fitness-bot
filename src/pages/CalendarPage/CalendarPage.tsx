@@ -32,13 +32,12 @@ export const CalendarPage: React.FC = () => {
   const { userData } = useAppSelector(state => state.auth);
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const navigate = useNavigate();
 
   const weekDays = ['Пн.', 'Вт.', 'Ср.', 'Чт.', 'Пт.', 'Сб.', 'Вс.'];
   const months = [
     'Январь',
-    'Декабрь',
+    'Февраль',
     'Март',
     'Апрель',
     'Май',
@@ -145,10 +144,9 @@ export const CalendarPage: React.FC = () => {
       workoutDate <= endOfWeek && (day.status === 'planned' || day.status === 'recommended' || day.status === 'last');
 
     if (isAllowed) {
-      setSelectedDay(day.date);
       navigate(`/training/${day.fullDate}`);
     } else if (day.status === 'planned' || day.status === 'recommended') {
-      toast.error('Выберете тренировку на этой неделе');
+      toast.info('Эта тренировка будет доступна на следующей неделе');
     }
   };
 
@@ -186,7 +184,7 @@ export const CalendarPage: React.FC = () => {
 
   useEffect(() => {
     const fetchWorkouts = async () => {
-      if (!userData?.telegram_id || !userData?.subscription) return;
+      if (!userData?.telegram_id || !userData.personal_workout_plan) return;
 
       try {
         const res = await axiosInstance.get('/personal-workout-plans/my/workouts', {

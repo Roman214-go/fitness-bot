@@ -11,27 +11,19 @@ interface ExerciseView {
   id: number;
   name: string;
   reps: number;
-  color: string;
+  color: string | null;
 }
 
 export const TrainingPage: React.FC = () => {
-  console.log('TRAINING PAGE MOUNTED');
-
   const navigate = useNavigate();
   const { date } = useParams<{ date: string }>();
-  console.log(date);
 
   const { data, isLoading, isError } = useGetWorkoutByDateQuery(date!);
 
-  if (isLoading) {
-    return <div className={styles.container}>Загрузка...</div>;
-  }
+  if (isLoading) return <div className={styles.container}>Загрузка...</div>;
+  if (isError || !data?.workout) return <div className={styles.container}>Тренировка не найдена</div>;
 
-  if (isError || !data?.length) {
-    return <div className={styles.container}>Тренировка не найдена</div>;
-  }
-
-  const workout = data[0];
+  const workout = data.workout;
 
   const exercises: ExerciseView[] =
     workout.personal_sets?.flatMap((set: any) =>
@@ -44,12 +36,8 @@ export const TrainingPage: React.FC = () => {
     ) ?? [];
 
   const handleStartTraining = () => {
-    navigate(`/workout/${date}`, { state: { workout } });
+    navigate(`/workout/${date}`, { state: { workout, workout_date: data.workout_date } });
   };
-
-  if (!workout) {
-    return <div className={styles.container}>Нет тренировки</div>;
-  }
 
   return (
     <div className={styles.container}>
@@ -57,9 +45,7 @@ export const TrainingPage: React.FC = () => {
         <button className={styles.backButton} onClick={() => navigate(-1)}>
           <MdArrowBackIos />
         </button>
-
         <h1 className={styles.title}>Упражнения</h1>
-
         <span className={styles.time}>00:00</span>
       </header>
 
@@ -70,7 +56,11 @@ export const TrainingPage: React.FC = () => {
 
         <div className={styles.exerciseList}>
           {exercises.map(ex => (
-            <div key={ex.id} className={styles.exerciseCard} style={{ borderColor: ex.color, color: ex.color }}>
+            <div
+              key={ex.id}
+              className={styles.exerciseCard}
+              style={{ borderColor: ex.color || '#fff', color: ex.color || '#fff' }}
+            >
               {ex.name}
             </div>
           ))}

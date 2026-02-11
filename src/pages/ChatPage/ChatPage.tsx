@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BsCheck2, BsCheck2All, BsX } from 'react-icons/bs';
+import { BsX } from 'react-icons/bs';
 import styles from './ChatPage.module.scss';
 import { useAppSelector } from '../../common/store/hooks';
+import { process } from '../../common/constants/process';
 
 interface Message {
   id: string;
@@ -11,8 +12,6 @@ interface Message {
   timestamp: Date;
   status?: 'sent' | 'delivered' | 'read';
 }
-
-const API_URL = 'http://localhost:8000';
 
 export const ChatPage: React.FC = () => {
   const { userData } = useAppSelector(state => state.auth);
@@ -40,7 +39,7 @@ export const ChatPage: React.FC = () => {
 
   const loadHistory = async (chatId: string, userId: number) => {
     try {
-      const res = await fetch(`${API_URL}/api/v1/realtime-chat/${chatId}/messages`, {
+      const res = await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/${chatId}/messages`, {
         headers: {
           'X-Telegram-Auth': JSON.stringify(currentUser),
         },
@@ -54,19 +53,23 @@ export const ChatPage: React.FC = () => {
       const data = await res.json();
 
       const mapped: Message[] = data
-        .map(m => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((m: { sender_id: number; id: any; content: any; photo_url: any; created_at: string | number | Date }) => {
           const isOwn = m.sender_id === userId;
 
           return {
             id: String(m.id),
             text: m.content ?? undefined,
-            image: m.photo_url ? `${API_URL}${m.photo_url}` : undefined,
+            image: m.photo_url ? `${process.env.REACT_APP_BASE_EMPTY_URL}${m.photo_url}` : undefined,
             sender: isOwn ? 'user' : 'other',
             timestamp: new Date(m.created_at),
             status: 'read',
           };
         })
-        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        .sort(
+          (a: { timestamp: { getTime: () => number } }, b: { timestamp: { getTime: () => number } }) =>
+            a.timestamp.getTime() - b.timestamp.getTime(),
+        );
 
       setMessages(mapped);
       setLoading(false);
@@ -80,10 +83,10 @@ export const ChatPage: React.FC = () => {
      Инициализация чата
   ======================= */
   useEffect(() => {
-    if (!userData?.subscription) return;
+    // if (!userData?.subscription) return;
     const initChat = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/v1/realtime-chat/my`, {
+        const res = await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/my`, {
           headers: {
             'X-Telegram-Auth': JSON.stringify(currentUser),
           },
@@ -116,7 +119,9 @@ export const ChatPage: React.FC = () => {
     if (!chatId || !userData?.subscription) return;
 
     const token = encodeURIComponent(JSON.stringify(currentUser));
-    const es = new EventSource(`${API_URL}/api/v1/realtime-chat/${chatId}/stream?token=${token}`);
+    const es = new EventSource(
+      `${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/${chatId}/stream?token=${token}`,
+    );
 
     eventSourceRef.current = es;
 
@@ -144,7 +149,7 @@ export const ChatPage: React.FC = () => {
               {
                 id: String(m.id),
                 text: m.content ?? undefined,
-                image: m.photo_url ? `${API_URL}${m.photo_url}` : undefined,
+                image: m.photo_url ? `${process.env.REACT_APP_BASE_EMPTY_URL}${m.photo_url}` : undefined,
                 sender: isOwn ? 'user' : 'other',
                 timestamp: new Date(m.created_at),
                 status: isOwn ? 'delivered' : undefined,
@@ -195,7 +200,7 @@ export const ChatPage: React.FC = () => {
     setInputValue('');
 
     try {
-      await fetch(`${API_URL}/api/v1/realtime-chat/${chatId}/send/text`, {
+      await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/${chatId}/send/text`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -241,7 +246,7 @@ export const ChatPage: React.FC = () => {
       formData.append('photo', file);
       formData.append('content', '');
 
-      const res = await fetch(`${API_URL}/api/v1/realtime-chat/${chatId}/send/photo`, {
+      const res = await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/${chatId}/send/photo`, {
         method: 'POST',
         headers: {
           'X-Telegram-Auth': JSON.stringify(currentUser),
@@ -276,8 +281,8 @@ export const ChatPage: React.FC = () => {
 
   // Закрытие по Escape
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && fullscreenImage) {
+    const handleEscape = () => {
+      if (fullscreenImage) {
         closeFullscreenImage();
       }
     };
@@ -319,12 +324,6 @@ export const ChatPage: React.FC = () => {
                   style={{ cursor: 'pointer' }}
                 />
               ) : null}
-
-              {msg.sender === 'user' && msg.status && (
-                <span className={`${styles.message_status} ${msg.status === 'read' ? styles.read : styles.sent}`}>
-                  {msg.status === 'read' ? <BsCheck2All size={16} /> : <BsCheck2 size={16} />}
-                </span>
-              )}
             </div>
           </div>
         ))}

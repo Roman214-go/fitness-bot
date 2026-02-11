@@ -29,7 +29,8 @@ interface Workout {
 
 export const WorkoutPage: React.FC = () => {
   const location = useLocation();
-  const { workout } = location.state as { workout: Workout };
+  const { workout, workout_date } = location.state as { workout: Workout; workout_date: { id: number } };
+
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -89,12 +90,12 @@ export const WorkoutPage: React.FC = () => {
         setCurrentExerciseIndex(0);
         setWeight('');
       } else {
+        // теперь используем workout_date.id
         console.log(workout);
-        await completeWorkout(workout.personal_sets[0].personal_workout_id).unwrap();
+
+        await completeWorkout(workout_date.id).unwrap();
         toast.success('Тренировка завершена!');
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
+        if (timerRef.current) clearInterval(timerRef.current);
 
         setIsCompleted(true);
         setTimeout(() => navigate('/calendar'), 3000);

@@ -1,4 +1,4 @@
-import { OnboardingSlideData } from './onboarding.data';
+import { OnboardingSlideData } from './onboarding.data.tsx';
 import styles from './Onboarding.module.scss';
 
 interface Props {

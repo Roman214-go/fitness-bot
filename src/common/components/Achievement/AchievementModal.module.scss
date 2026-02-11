@@ -8,10 +8,18 @@
   z-index: 1000;
 }
 
+.buttonContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
 .modal {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-evenly;
+  gap: 15px;
   align-items: center;
   background: #1e1e1e;
   border-radius: 20px;

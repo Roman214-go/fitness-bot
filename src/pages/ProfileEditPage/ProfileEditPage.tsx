@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from '../../common/store/hooks';
 import { setUserData } from '../../common/auth/authSlice';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { process } from '../../common/constants/process';
 
 const validationSchema = Yup.object({
   age: Yup.number()
@@ -52,17 +53,16 @@ const ProfileEditPage: React.FC = () => {
     try {
       const localUrl = URL.createObjectURL(file);
 
-      await axiosInstance.put(
-        'profile/me/change-photo',
-        {
-          photoUrl: localUrl,
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      await axiosInstance.put('profile/me/photo', formData, {
+        headers: {
+          'X-Telegram-Auth': JSON.stringify({
+            telegram_id: userData?.telegram_id,
+          }),
         },
-        {
-          headers: {
-            'X-Telegram-Auth': JSON.stringify({ telegram_id: userData?.telegram_id }),
-          },
-        },
-      );
+      });
 
       const res = await axiosInstance.get(`/users/telegram/${userData?.telegram_id}`, {
         params: { include_relations: true },
@@ -86,7 +86,15 @@ const ProfileEditPage: React.FC = () => {
         </button>
 
         <input ref={fileInputRef} type='file' accept='image/*' hidden onChange={handlePhotoChange} />
-        <img src={photoUrl || userData?.photo_url || 'https://i.pravatar.cc/150?img=8'} />
+        {userData?.photo_url ? (
+          <img
+            src={
+              photoUrl ||
+              `${process.env.REACT_APP_BASE_EMPTY_URL}/static/${userData?.photo_url}` ||
+              'https://i.pravatar.cc/150?img=8'
+            }
+          />
+        ) : null}
       </div>
 
       <Formik

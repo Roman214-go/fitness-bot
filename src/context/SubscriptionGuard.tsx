@@ -8,12 +8,13 @@ type Props = {
 
 export const SubscriptionGuard = ({ children }: Props) => {
   const { authData, userData } = useAppSelector(state => state.auth);
+
   if (!authData) return <>{children}</>;
 
   return (
     <>
       {children}
-      {(!userData?.subscription || userData.subscription === 'in progress') && <Paywall />}
+      {(!userData?.subscription || !userData.personal_workout_plan) && <Paywall />}
     </>
   );
 };

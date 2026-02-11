@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
+
 import { Layout } from './components/Layout/Layout';
-import styles from './App.module.scss';
 import HomePage from '../pages/HomePage/HomePage';
 import { OnboardingGuard } from './components/Onboarding/OnboardingGuard';
 import { MainFormPage } from '../pages/MainFormPage/MainFormPage';
@@ -15,12 +16,16 @@ import { TrainingPage } from '../pages/TrainingPage/TrainingPage';
 import { WorkoutPage } from '../pages/WorkoutPage/WorkoutPage';
 import { SubscriptionGuard } from '../context/SubscriptionGuard';
 import { AuthInitializer } from './auth/AuthInitializer';
-import { useState } from 'react';
 import { HomeworkPage } from '../pages/HomeworkPage/HomeworkPage';
 import { PrivacyPage } from '../pages/PrivacyPage/PrivacyPage';
 
+import styles from './App.module.scss';
+import { useAppSelector } from './store/hooks';
+import { AdminChatPage } from '../pages/ChatPage/AdminChatPage';
+
 const App = () => {
   const [authLoaded, setAuthLoaded] = useState(false);
+  const { userData } = useAppSelector(state => state.auth);
 
   if (!authLoaded) {
     return <AuthInitializer onAuthLoaded={() => setAuthLoaded(true)} />;
@@ -49,9 +54,13 @@ const App = () => {
             <Route
               path='/chat'
               element={
-                <SubscriptionGuard>
-                  <ChatPage />
-                </SubscriptionGuard>
+                userData?.role.name === 'admin' ? (
+                  <AdminChatPage />
+                ) : (
+                  <SubscriptionGuard>
+                    <ChatPage />
+                  </SubscriptionGuard>
+                )
               }
             />
             <Route path='/profile' element={<ProfilePage />} />

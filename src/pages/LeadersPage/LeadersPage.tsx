@@ -1,28 +1,47 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styles from './LeadersPage.module.scss';
-
-interface LeaderboardUser {
-  id: number;
-  nickname: string;
-  score: string;
-  avatar?: string;
-}
+import { useGetLeaderboardQuery, useGetUserStatsQuery } from './api/leaderboardSlice';
+import { useAppSelector } from '../../common/store/hooks';
 
 export const LeadersPage: React.FC = () => {
-  const topThree: LeaderboardUser[] = [
-    { id: 2, nickname: 'Nickname', score: '67', avatar: 'https://i.pravatar.cc/150?img=2' },
-    { id: 1, nickname: 'Nickname', score: '69', avatar: 'https://i.pravatar.cc/150?img=1' },
-    { id: 3, nickname: 'Nickname', score: '42', avatar: 'https://i.pravatar.cc/150?img=3' },
-  ];
+  const { userData } = useAppSelector(state => state.auth);
 
-  const otherUsers: LeaderboardUser[] = [
-    { id: 4, nickname: 'Nickname', score: '41', avatar: 'https://i.pravatar.cc/150?img=4' },
-    { id: 5, nickname: 'Nickname', score: '34' },
-    { id: 6, nickname: 'Nickname', score: '32', avatar: 'https://i.pravatar.cc/150?img=6' },
-    { id: 7, nickname: 'Nickname', score: '26' },
-    { id: 8, nickname: 'Nickname', score: '25', avatar: 'https://i.pravatar.cc/150?img=8' },
-    { id: 9, nickname: 'Nickname', score: '23' },
-  ];
+  const { data: leaderboard = [], isLoading } = useGetLeaderboardQuery(20);
+
+  const { data: userStats } = useGetUserStatsQuery({
+    userId: userData?.id,
+    telegramId: userData?.telegram_id,
+  });
+
+  const isUserInTop20 = leaderboard.some(user => user.user_id === userData?.id);
+
+  const users = useMemo(() => {
+    if (isUserInTop20 || !userStats) {
+      return leaderboard;
+    }
+
+    return [
+      ...leaderboard,
+      {
+        user_id: userData?.id,
+        position: userStats.global_position,
+        total_points: userStats.total_points_earned,
+        username: 'Вы',
+        first_name: null,
+        last_name: null,
+        photoUrl: undefined,
+      },
+    ];
+  }, [isUserInTop20, userStats, leaderboard, userData?.id]);
+
+  const topThree = users
+    .filter(user => user.position <= 3)
+    .sort((a, b) => {
+      const order = [2, 1, 3];
+      return order.indexOf(a.position) - order.indexOf(b.position);
+    });
+
+  const otherUsers = users.filter(user => user.position > 3);
 
   const getPlaceClass = (place: number) => {
     switch (place) {
@@ -48,20 +67,28 @@ export const LeadersPage: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return <div className={styles.container}>Загрузка...</div>;
+  }
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>Гонка за лидерством</header>
 
       <div className={styles.podiumSection}>
         {topThree.map(user => (
-          <div key={user.id} className={styles.podiumItem}>
+          <div key={user.user_id} className={styles.podiumItem}>
             <div className={styles.avatarContainer}>
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.nickname} className={`${styles.avatar} ${getPlaceClass(user.id)}`} />
+              {user.photoUrl ? (
+                <img
+                  src={user.photoUrl}
+                  alt={user.username ?? 'user'}
+                  className={`${styles.avatar} ${getPlaceClass(user.position)}`}
+                />
               ) : (
-                <div className={`${styles.avatar} ${getPlaceClass(user.id)}`} />
+                <div className={`${styles.avatar} ${getPlaceClass(user.position)}`} />
               )}
-              <div className={getBadgeClass(user.id)}>{user.id}</div>
+              <div className={getBadgeClass(user.position)}>{user.position}</div>
             </div>
           </div>
         ))}
@@ -72,26 +99,26 @@ export const LeadersPage: React.FC = () => {
           <span>Место</span>
           <span>Очки</span>
         </div>
-        {otherUsers.map(user => (
-          <div key={user.id} className={styles.listItem}>
-            <span className={styles.rank}>{user.id}</span>
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.nickname} className={styles.listAvatar} />
-            ) : (
-              <div className={styles.listAvatar} />
-            )}
-            <span className={styles.nickname}>{user.nickname}</span>
-            <span className={styles.score}>{user.score}</span>
-          </div>
-        ))}
-        <div style={{ display: 'flex', alignItems: 'end', padding: '10px', height: '50px' }}>...</div>
-        <div className={styles.listItem}>
-          <span className={styles.rank}>123</span>
 
-          <div className={styles.listAvatar} />
-          <span className={styles.nickname}>Ваш никнейм</span>
-          <span className={styles.score}>23</span>
-        </div>
+        {otherUsers.map(user => {
+          const isCurrentUser = user.user_id === userData?.id;
+
+          return (
+            <div key={user.user_id} className={`${styles.listItem} ${isCurrentUser ? styles.currentUser : ''}`}>
+              <span className={styles.rank}>{user.position}</span>
+
+              {user.photoUrl ? (
+                <img src={user.photoUrl} alt={user.username ?? 'user'} className={styles.listAvatar} />
+              ) : (
+                <div className={styles.listAvatar} />
+              )}
+
+              <span className={styles.nickname}>{isCurrentUser ? 'Вы' : user.username || 'Без имени'}</span>
+
+              <span className={styles.score}>{user.total_points}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

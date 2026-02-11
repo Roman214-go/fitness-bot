@@ -4,6 +4,7 @@ import { RootState } from '../../../common/store/store';
 
 export const getTraineeApi = createApi({
   reducerPath: 'api',
+  tagTypes: ['UpcomingWorkout'],
   baseQuery: fetchBaseQuery({
     baseUrl: 'http://localhost:8000/api/v1',
     prepareHeaders: (headers, { getState }) => {
@@ -17,21 +18,35 @@ export const getTraineeApi = createApi({
   }),
   endpoints: builder => ({
     getWorkoutByDate: builder.query<any, string>({
-      query: date => `/personal-workout-plans/my/workouts/date/${date}`,
+      query: date => `/personal-workout-plans/date/${date}/workout`,
     }),
+
     completeSet: builder.mutation<void, number>({
       query: setId => ({
         url: `/personal-workout-plans/sets/${setId}/complete`,
         method: 'POST',
       }),
+      invalidatesTags: ['UpcomingWorkout'],
     }),
+
     completeWorkout: builder.mutation<void, number>({
       query: workoutDateId => ({
         url: `/personal-workout-plans/workout-dates/${workoutDateId}/complete`,
         method: 'POST',
       }),
+      invalidatesTags: ['UpcomingWorkout'],
+    }),
+
+    getUpcomingWorkout: builder.query<any, void>({
+      query: () => `/personal-workout-plans/my/workouts/upcoming`,
+      providesTags: ['UpcomingWorkout'],
     }),
   }),
 });
 
-export const { useGetWorkoutByDateQuery, useCompleteSetMutation, useCompleteWorkoutMutation } = getTraineeApi;
+export const {
+  useGetWorkoutByDateQuery,
+  useCompleteSetMutation,
+  useCompleteWorkoutMutation,
+  useGetUpcomingWorkoutQuery,
+} = getTraineeApi;

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import dayjs from 'dayjs';
 import { CalorieChart } from '../../common/components/CalorieChart/CalorieChart';
-import { FaAward } from 'react-icons/fa6';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 import styles from './ProfilePage.module.scss';
@@ -11,15 +10,41 @@ import { Link, useNavigate } from 'react-router-dom';
 import { WeightPrediction } from '../../common/components/WeightScale/WeightScale';
 import { Achievement } from '../../common/components/Achievement/Achievement';
 import { LiaAwardSolid } from 'react-icons/lia';
-import { useAppSelector } from '../../common/store/hooks';
+import { useAppSelector, useAppDispatch } from '../../common/store/hooks';
 import { coachSpeech } from '../../common/constants/coachSpeech';
+import { fetchAchievements, fetchMyAchievements, fetchMyMainAchievement } from './api/achievementsSlice';
+import { process } from '../../common/constants/process';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [currentSpeech, setCurrentSpeech] = useState(0);
 
   const { userData } = useAppSelector(state => state.auth);
+  const {
+    achievements,
+    myAchievements,
+    myMainAchievement,
+    loading: achievementsLoading,
+  } = useAppSelector(state => state.achievements);
+
+  const telegramId = userData?.telegram_id;
+
+  const myAchievementIds = new Set(myAchievements.map(a => a.achievement_id));
+
+  const mergedAchievements = achievements.map(achievement => ({
+    ...achievement,
+    isUnlocked: myAchievementIds.has(achievement.id),
+  }));
+
+  useEffect(() => {
+    if (telegramId) {
+      dispatch(fetchAchievements({ telegramId, includeInactive: false }));
+      dispatch(fetchMyAchievements({ telegramId }));
+      dispatch(fetchMyMainAchievement({ telegramId }));
+    }
+  }, [dispatch, telegramId]);
 
   const handleOpenSpeech = () => {
     setIsOpen(true);
@@ -38,51 +63,6 @@ export const ProfilePage: React.FC = () => {
     back_pain_relief: 'Снятие боли в спине',
     posture_correction: 'Коррекция осанки',
   };
-
-  const achievements = [
-    {
-      id: 1,
-      title: 'Сила',
-      description: 'Дается за 30 успешно выполненных тренировок',
-      icon: <LiaAwardSolid fontSize={40} />,
-      isUnlocked: true,
-    },
-    {
-      id: 2,
-      title: 'Сила',
-      description: 'Дается за 30 успешно выполненных тренировок',
-      icon: <LiaAwardSolid fontSize={40} />,
-      isUnlocked: true,
-    },
-    {
-      id: 3,
-      title: 'Сила',
-      description: 'Дается за 30 успешно выполненных тренировок',
-      icon: <LiaAwardSolid fontSize={40} />,
-      isUnlocked: false,
-    },
-    {
-      id: 4,
-      title: 'Сила',
-      description: 'Дается за 30 успешно выполненных тренировок',
-      icon: <LiaAwardSolid fontSize={40} />,
-      isUnlocked: true,
-    },
-    {
-      id: 5,
-      title: 'Сила',
-      description: 'Дается за 30 успешно выполненных тренировок',
-      icon: <LiaAwardSolid fontSize={40} />,
-      isUnlocked: false,
-    },
-    {
-      id: 6,
-      title: 'Сила',
-      description: 'Дается за 30 успешно выполненных тренировок',
-      icon: <LiaAwardSolid fontSize={40} />,
-      isUnlocked: true,
-    },
-  ];
 
   const userGoals = React.useMemo(() => {
     if (!userData?.fitness_goals) return [];
@@ -110,14 +90,22 @@ export const ProfilePage: React.FC = () => {
         <div className={styles.avatarSection}>
           <div className={styles.avatar}>
             {userData?.photo_url ? (
-              <img src={userData?.photo_url} alt='Avatar' className={styles.avatarImage} />
+              <img
+                src={`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${userData?.photo_url}`}
+                alt='Avatar'
+                className={styles.avatarImage}
+              />
             ) : (
               <div className={styles.avatarCircle} />
             )}
-
-            <div className={styles.editAvatar}>
-              <FaAward />
-            </div>
+            {myMainAchievement?.photo_url ? (
+              <div className={styles.editAvatar}>
+                <img
+                  className={styles.achievementImage}
+                  src={`${process.env.REACT_APP_BASE_EMPTY_URL}${myMainAchievement?.photo_url}`}
+                />
+              </div>
+            ) : null}
           </div>
 
           <h2>{userData?.first_name}</h2>
@@ -157,7 +145,7 @@ export const ProfilePage: React.FC = () => {
             <div className={styles.trainee_labelContainer}>
               <p>Дней с нами</p>
             </div>
-            <p style={{ color: '#E2F163' }}>{daysWithUs !== null ? `${daysWithUs} дней` : '—'}</p>{' '}
+            <p style={{ color: '#E2F163' }}>{daysWithUs !== null ? `${daysWithUs} дней` : '—'}</p>
           </div>
         </div>
 
@@ -188,19 +176,27 @@ export const ProfilePage: React.FC = () => {
         <div className={styles.coach_speech} onClick={handleOpenSpeech}>
           Наставление тренера
         </div>
-        <WeightPrediction value={70} />
-        <h2 className={styles.achievements_title}>Личные достижения</h2>
-        <div className={styles.achievements}>
-          {achievements.map(item => (
-            <Achievement
-              key={item.id}
-              title={item.title}
-              description={item.description}
-              icon={item.icon}
-              isUnlocked={item.isUnlocked}
-            />
-          ))}
-        </div>
+        {userData?.fitness_goals.goal === 'weight_loss' ? <WeightPrediction value={70} /> : null}
+        <h2 className={styles.achievements_title}>Доступные достижения</h2>
+
+        {achievementsLoading ? (
+          <div className={styles.achievementsLoading}>Загрузка достижений...</div>
+        ) : (
+          <div className={styles.achievements}>
+            {mergedAchievements.map(item => (
+              <Achievement
+                key={item.id}
+                achievementId={item.id}
+                title={item.name}
+                description={item.description}
+                photoUrl={`${process.env.REACT_APP_BASE_EMPTY_URL}${item.photo_url}`}
+                icon={<LiaAwardSolid fontSize={40} />}
+                isUnlocked={item.isUnlocked}
+              />
+            ))}
+          </div>
+        )}
+
         <Link
           to='/privacy'
           style={{ color: '#4e4e4e', marginTop: '20px', textAlign: 'right', textDecoration: 'underline' }}

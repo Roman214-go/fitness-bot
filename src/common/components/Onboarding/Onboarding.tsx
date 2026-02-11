@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { onboardingSlides } from './onboarding.data';
+import { onboardingSlides } from './onboarding.data.tsx';
 import { OnboardingSlide } from './OnboardingSlide';
 import { OnboardingDots } from './OnboardingDots';
 import Button from '../Button';
@@ -12,10 +12,9 @@ import { useAppSelector } from '../../store/hooks';
 
 export const Onboarding = () => {
   const { authData } = useAppSelector(state => state.auth);
-  console.log(authData);
 
   const [activeIndex, setActiveIndex] = useState(
-    authData?.progress.has_anthropometric_data && authData.progress.has_body_photos ? 4 : 0,
+    authData?.progress.has_anthropometric_data && authData.progress.has_body_photos ? 5 : 0,
   );
   const navigate = useNavigate();
 
@@ -41,9 +40,13 @@ export const Onboarding = () => {
   return (
     <div className={styles.wrapper} style={{ padding: isLastSlide ? '0' : '5%' }}>
       {!isLastSlide ? (
-        <button type='button' className={styles.wrapper_skip} onClick={() => setActiveIndex(onboardingSlides.length)}>
-          Пропустить
-        </button>
+        activeIndex === 0 ? (
+          <div />
+        ) : (
+          <button type='button' className={styles.wrapper_skip} onClick={() => setActiveIndex(onboardingSlides.length)}>
+            Пропустить
+          </button>
+        )
       ) : (
         <p className={styles.wrapper_subscription}>Выберите подходящий для вас тип подписки</p>
       )}

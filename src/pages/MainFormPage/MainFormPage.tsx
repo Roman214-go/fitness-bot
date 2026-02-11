@@ -124,7 +124,6 @@ export const MainFormPage = () => {
     dispatch(setUserData(res.data));
 
     navigate('/anamnesis-form');
-    console.log('post values:', values);
   };
 
   const handlePhotoUpload = (
@@ -268,11 +267,11 @@ export const MainFormPage = () => {
             <label className={styles.formLabel}>Количество тренировок в неделю</label>
             <div className={styles.radioGroup}>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='workouts_per_week' value='2' />
+                <Field type='radio' name='workouts_per_week' value='4' />
                 <span>2</span>
               </label>
               <label className={styles.radioLabel}>
-                <Field type='radio' name='workouts_per_week' value='3' />
+                <Field type='radio' name='workouts_per_week' value='6' />
                 <span>3</span>
               </label>
             </div>
