@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { MdArrowBackIos } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import styles from './TrainingPage.module.scss';
 import Button from '../../common/components/Button';
 import { useGetWorkoutByDateQuery } from './api/getTrainee';
+import { toast, ToastContainer, Id } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface ExerciseView {
   id: number;
@@ -17,8 +19,38 @@ interface ExerciseView {
 export const TrainingPage: React.FC = () => {
   const navigate = useNavigate();
   const { date } = useParams<{ date: string }>();
+  const toastIdRef = useRef<Id | null>(null);
+  const [showNotificationButton, setShowNotificationButton] = useState(false);
 
   const { data, isLoading, isError } = useGetWorkoutByDateQuery(date!);
+
+  const notificationText =
+    'На этой тренировке следует поднять нагрузку с помощью дополнительного отягощения. Для этого сделайте подъем на один шаг в весе в каждом упражнении. Если в каком-то упражнении Вы не сможете реализовать заданое количество повторений с новой нагрузкой, то оставьте для этого упражнения старое значение веса. Если у Вас появяться какие-либо вопросы, то следует написать тренеру.';
+
+  const showNotification = () => {
+    if (toastIdRef.current) {
+      toast.dismiss(toastIdRef.current);
+    }
+
+    toastIdRef.current = toast(notificationText, {
+      autoClose: 5000,
+      closeButton: true,
+      draggable: false,
+      position: 'bottom-right',
+      onClose: () => {
+        setShowNotificationButton(true);
+      },
+    });
+
+    setShowNotificationButton(false);
+  };
+
+  useEffect(() => {
+    if (data?.workout && data.workout.is_cycle_completed) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      showNotification();
+    }
+  }, [data]);
 
   if (isLoading) return <div className={styles.container}>Загрузка...</div>;
   if (isError || !data?.workout) return <div className={styles.container}>Тренировка не найдена</div>;
@@ -70,6 +102,23 @@ export const TrainingPage: React.FC = () => {
           <Button onClick={handleStartTraining}>Начать тренировку</Button>
         </div>
       </div>
+
+      <ToastContainer
+        theme='light'
+        hideProgressBar
+        toastStyle={{
+          fontSize: '14px',
+          lineHeight: '1.5',
+          background: '#672dca',
+          color: 'white',
+        }}
+      />
+
+      {showNotificationButton && (
+        <button className={styles.notificationButton} onClick={showNotification}>
+          <MdArrowBackIos />
+        </button>
+      )}
     </div>
   );
 };

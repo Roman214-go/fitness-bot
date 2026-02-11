@@ -16,9 +16,9 @@ export const WeightPrediction = ({ value }: Props) => {
       </div>
 
       <div className={styles.value}>
-        <span style={{ color: '#B3A0FF' }}>{value - 2.5}кг</span>
+        <span style={{ color: '#B3A0FF' }}>{Math.round(10 * (value - 2.5)) / 10}кг</span>
         <span style={{ fontSize: 42 }}>{value}кг</span>
-        <span style={{ color: '#B3A0FF' }}>{value + 2.5}кг</span>
+        <span style={{ color: '#B3A0FF' }}>{Math.round(10 * (value + 2.5)) / 10}кг</span>
       </div>
 
       <div className={styles.scale}>

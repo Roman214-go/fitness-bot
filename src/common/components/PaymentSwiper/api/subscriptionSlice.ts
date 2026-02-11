@@ -1,31 +1,35 @@
 // src/store/slices/subscriptionPlansSlice.ts
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { SubscriptionPlan, subscriptionPlansApi, SubscriptionPlansResponse } from './subscriptionApi';
 
 interface SubscriptionPlansState {
   plans: SubscriptionPlan[];
+  userDiscount: number;
   loading: boolean;
+  location: string;
   error: string | null;
 }
 
 const initialState: SubscriptionPlansState = {
   plans: [],
+  location: '',
+  userDiscount: 0,
   loading: false,
   error: null,
 };
 
-export const fetchSubscriptionPlans = createAsyncThunk<SubscriptionPlansResponse, number, { rejectValue: string }>(
-  'subscriptionPlans/fetchAll',
-  async (telegramId, { rejectWithValue }) => {
-    try {
-      const response = await subscriptionPlansApi.getAll(telegramId);
-      return response;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Ошибка загрузки планов');
-    }
-  },
-);
+export const fetchSubscriptionPlans = createAsyncThunk<
+  SubscriptionPlansResponse,
+  { userId: number; currency: 'BYN' | 'RUB' },
+  { rejectValue: string }
+>('subscriptionPlans/fetchAll', async ({ userId, currency }, { rejectWithValue }) => {
+  try {
+    return await subscriptionPlansApi.getAll(userId, currency);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || 'Ошибка загрузки планов');
+  }
+});
 
 const subscriptionPlansSlice = createSlice({
   name: 'subscriptionPlans',
@@ -42,10 +46,13 @@ const subscriptionPlansSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchSubscriptionPlans.fulfilled, (state, action: PayloadAction<SubscriptionPlansResponse>) => {
+      .addCase(fetchSubscriptionPlans.fulfilled, (state, action) => {
         state.loading = false;
         state.plans = action.payload.plans;
+        state.location = action.payload.location;
+        state.userDiscount = action.payload.user_discount;
       })
+
       .addCase(fetchSubscriptionPlans.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Произошла ошибка';

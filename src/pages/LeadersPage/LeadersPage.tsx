@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import styles from './LeadersPage.module.scss';
 import { useGetLeaderboardQuery, useGetUserStatsQuery } from './api/leaderboardSlice';
 import { useAppSelector } from '../../common/store/hooks';
+import { process } from '../../common/constants/process';
 
 export const LeadersPage: React.FC = () => {
   const { userData } = useAppSelector(state => state.auth);
@@ -29,10 +30,10 @@ export const LeadersPage: React.FC = () => {
         username: 'Вы',
         first_name: null,
         last_name: null,
-        photoUrl: undefined,
+        photo_url: userData?.photo_url,
       },
     ];
-  }, [isUserInTop20, userStats, leaderboard, userData?.id]);
+  }, [isUserInTop20, userStats, leaderboard, userData?.id, userData?.photo_url]);
 
   const topThree = users
     .filter(user => user.position <= 3)
@@ -79,9 +80,9 @@ export const LeadersPage: React.FC = () => {
         {topThree.map(user => (
           <div key={user.user_id} className={styles.podiumItem}>
             <div className={styles.avatarContainer}>
-              {user.photoUrl ? (
+              {user.photo_url ? (
                 <img
-                  src={user.photoUrl}
+                  src={`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${user?.photo_url}`}
                   alt={user.username ?? 'user'}
                   className={`${styles.avatar} ${getPlaceClass(user.position)}`}
                 />
@@ -107,8 +108,12 @@ export const LeadersPage: React.FC = () => {
             <div key={user.user_id} className={`${styles.listItem} ${isCurrentUser ? styles.currentUser : ''}`}>
               <span className={styles.rank}>{user.position}</span>
 
-              {user.photoUrl ? (
-                <img src={user.photoUrl} alt={user.username ?? 'user'} className={styles.listAvatar} />
+              {user.photo_url ? (
+                <img
+                  src={`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${user?.photo_url}`}
+                  alt={user.username ?? 'user'}
+                  className={styles.listAvatar}
+                />
               ) : (
                 <div className={styles.listAvatar} />
               )}

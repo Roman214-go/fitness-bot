@@ -20,7 +20,19 @@ export const getTraineeApi = createApi({
     getWorkoutByDate: builder.query<any, string>({
       query: date => `/personal-workout-plans/date/${date}/workout`,
     }),
-
+    completeExercise: builder.mutation<void, { exerciseId: number; weight?: number }>({
+      query: ({ exerciseId, weight }) => ({
+        url: `/personal-workout-plans/exercises/${exerciseId}/complete`,
+        method: 'POST',
+        body: weight ? { weight } : {}, // если веса нет — отправляем пустое тело
+      }),
+    }),
+    incompleteExercise: builder.mutation<void, { exerciseId: number }>({
+      query: ({ exerciseId }) => ({
+        url: `/personal-workout-plans/exercises/${exerciseId}/incomplete`,
+        method: 'POST',
+      }),
+    }),
     completeSet: builder.mutation<void, number>({
       query: setId => ({
         url: `/personal-workout-plans/sets/${setId}/complete`,
@@ -48,5 +60,7 @@ export const {
   useGetWorkoutByDateQuery,
   useCompleteSetMutation,
   useCompleteWorkoutMutation,
+  useCompleteExerciseMutation,
+  useIncompleteExerciseMutation,
   useGetUpcomingWorkoutQuery,
 } = getTraineeApi;

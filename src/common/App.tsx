@@ -17,7 +17,6 @@ import { WorkoutPage } from '../pages/WorkoutPage/WorkoutPage';
 import { SubscriptionGuard } from '../context/SubscriptionGuard';
 import { AuthInitializer } from './auth/AuthInitializer';
 import { HomeworkPage } from '../pages/HomeworkPage/HomeworkPage';
-import { PrivacyPage } from '../pages/PrivacyPage/PrivacyPage';
 
 import styles from './App.module.scss';
 import { useAppSelector } from './store/hooks';
@@ -38,7 +37,6 @@ const App = () => {
           <Route path='/onboarding' element={<Onboarding />} />
           <Route path='/main-form' element={<MainFormPage />} />
           <Route path='/anamnesis-form' element={<AnamnesisFormPage />} />
-          <Route path='/privacy' element={<PrivacyPage />} />
 
           <Route element={<Layout />}>
             <Route path='/' element={<HomePage />} />

@@ -83,7 +83,7 @@ export const ChatPage: React.FC = () => {
      Инициализация чата
   ======================= */
   useEffect(() => {
-    // if (!userData?.subscription) return;
+    if (!userData?.has_workout_plan) return;
     const initChat = async () => {
       try {
         const res = await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/my`, {
@@ -116,7 +116,7 @@ export const ChatPage: React.FC = () => {
      SSE подключение
   ======================= */
   useEffect(() => {
-    if (!chatId || !userData?.subscription) return;
+    if (!chatId || !userData?.has_workout_plan) return;
 
     const token = encodeURIComponent(JSON.stringify(currentUser));
     const es = new EventSource(

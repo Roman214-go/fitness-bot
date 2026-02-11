@@ -108,7 +108,11 @@ const ProfileEditPage: React.FC = () => {
         validationSchema={validationSchema}
         onSubmit={async values => {
           try {
-            if (!values.goal) {
+            if (
+              values.age !== userData?.anthropometric_data.age ||
+              values.height !== userData?.anthropometric_data.height ||
+              values.weight !== userData?.anthropometric_data.weight
+            ) {
               await axiosInstance.put(
                 'profile/me/anthropometric',
                 {
@@ -123,7 +127,9 @@ const ProfileEditPage: React.FC = () => {
                   },
                 },
               );
-            } else {
+            }
+
+            if (userData?.fitness_goals.goal !== values.goal) {
               await axiosInstance.put(
                 'profile/me/fitness-goals',
                 {

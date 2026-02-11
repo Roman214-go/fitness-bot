@@ -9,7 +9,7 @@ export interface LeaderboardUser {
   first_name: string | null;
   last_name: string | null;
   username: string | null;
-  photoUrl?: string;
+  photo_url?: string;
 }
 
 export interface UserStatsResponse {

@@ -20,7 +20,7 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
 
       try {
         const authResponse = await verifyAuth({
-          telegram_id: 739771071,
+          telegram_id: telegramUser?.id,
           username: telegramUser?.username ?? 'User',
           first_name: telegramUser?.first_name ?? 'Name',
           last_name: telegramUser?.last_name ?? 'Surname',

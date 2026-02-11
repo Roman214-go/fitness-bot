@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import styles from './PaymentSwiper.module.scss';
 import Button from '../Button';
@@ -12,55 +12,78 @@ import 'swiper/css/navigation';
 //@ts-expect-error
 import 'swiper/css';
 import { fetchSubscriptionPlans } from './api/subscriptionSlice';
-import { createPayment } from './api/paymentSlice';
-import { CreatePaymentRequest } from './api/paymentApi';
+import { activateTrial } from './api/trialSlice';
+import { SubscriptionPlan } from './api/subscriptionApi';
+import { useNavigate } from 'react-router-dom';
+import { axiosInstance } from '../../utils/axiosInstance';
+import { setUserData } from '../../auth/authSlice';
+import { toast, ToastContainer } from 'react-toastify';
+import { PaymentModal } from './PaymentModal';
 
 export const PaymentSwiper = () => {
   const dispatch = useAppDispatch();
   const { userData } = useAppSelector(state => state.auth);
-  const { plans, loading, error } = useAppSelector(state => state.subscriptionPlans);
+  const { plans, location, loading, error } = useAppSelector(state => state.subscriptionPlans);
   const { loading: paymentLoading } = useAppSelector(state => state.payment);
+  const navigate = useNavigate();
 
-  const telegramId = userData?.telegram_id;
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
-    if (telegramId) {
-      dispatch(fetchSubscriptionPlans(telegramId));
+    if (userData?.id) {
+      dispatch(
+        fetchSubscriptionPlans({
+          userId: userData.id,
+          currency: 'BYN',
+        }),
+      );
     }
-  }, [dispatch, telegramId]);
+  }, [dispatch, userData?.id]);
 
-  const handleBuyPlan = async (subscriptionType: string, currency: 'BYN' | 'RUB') => {
-    if (!telegramId) {
-      alert('Не удалось определить пользователя');
+  const getCurrencyByLocation = (location?: string): 'BYN' | 'RUB' => {
+    if (location === 'BY') return 'BYN';
+    return 'RUB'; // ru | any | undefined
+  };
+
+  const handleBuyPlan = async (plan: SubscriptionPlan, currency: 'BYN' | 'RUB') => {
+    if (!userData?.id) {
       return;
     }
 
-    const paymentData: CreatePaymentRequest = {
-      subscription_type: subscriptionType,
-      currency: currency,
-      user_email: userData.username || 'user@example.com',
-      billing_info: {
-        first_name: userData.first_name || 'Имя',
-        last_name: userData.last_name || 'Фамилия',
-        phone: '+375000000000',
-        country: 'BY',
-        city: 'Минск',
-        address: 'Адрес',
-        zip_code: '220000',
-      },
-      card_holder: `${userData.first_name || 'Имя'} ${userData.last_name || 'Фамилия'}`,
-    };
-    const userId = userData.id;
-    try {
-      const result = await dispatch(createPayment({ userId, paymentData, telegramId })).unwrap();
+    const price = currency === 'BYN' ? plan.pricing.byn.final_price : plan.pricing.rub.final_price;
 
-      if (result.success && result.payment_url) {
-        // eslint-disable-next-line react-hooks/immutability
-        window.location.href = result.payment_url;
+    if (price !== 0) {
+      setSelectedPlan(plan);
+      setIsPaymentModalOpen(true);
+      return;
+    }
+
+    if (price === 0) {
+      try {
+        const result = await dispatch(activateTrial(userData.id)).unwrap();
+
+        if (result.success) {
+          const res = await axiosInstance.get(`/users/telegram/${userData.telegram_id}`, {
+            params: { include_relations: true },
+          });
+
+          dispatch(setUserData(res.data));
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+          !userData.body_photos
+            ? navigate('/main-form')
+            : !userData.anthropometric_data
+              ? navigate('/anamnesis-form')
+              : navigate('/');
+        }
+      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        toast(error);
       }
-    } catch (error) {
-      console.error('Ошибка при создании платежа:', error);
-      alert('Не удалось создать платёж. Попробуйте позже.');
+
+      return;
     }
   };
 
@@ -89,27 +112,54 @@ export const PaymentSwiper = () => {
   }
 
   return (
-    <Swiper spaceBetween={50} slidesPerView={1} modules={[Navigation]} navigation>
-      {plans.map(item => (
-        <SwiperSlide key={item.id}>
-          <div className={styles.swiper_container}>
-            <div>
-              <h2 className={styles.title}>{item.name}</h2>
-              <p style={{ textAlign: 'start' }}>{item.duration_days} дней</p>
-            </div>
-            <p style={{ textAlign: 'start' }}>{item.description}</p>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'end', margin: '10px 0' }}>
-                <p className={styles.discount_price}>{item.formatted_prices.rub}</p>
+    <>
+      <Swiper spaceBetween={50} slidesPerView={1} modules={[Navigation]} navigation>
+        {plans.map(plan => {
+          const currency = getCurrencyByLocation(location);
+          const price = currency === 'BYN' ? plan.pricing.byn : plan.pricing.rub;
+
+          return (
+            <SwiperSlide key={plan.subscription_type}>
+              <div className={styles.swiper_container}>
+                <div>
+                  <h2 className={styles.title}>{plan.name}</h2>
+                  <p style={{ textAlign: 'start' }}>{plan.duration_days} дней</p>
+                </div>
+
+                <p style={{ textAlign: 'start' }}> {plan.description}</p>
+
+                <div>
+                  {/* Старая цена */}
+                  {price.savings > 0 && <p className={styles.discount_price}>{price.formatted_base_price}</p>}
+
+                  {/* Итоговая цена */}
+                  <p className={styles.price}>{price.formatted_final_price}</p>
+
+                  {/* Скидка */}
+                  {plan.discount_percent > 0 && (
+                    <p className={styles.discount}>
+                      Скидка − {plan.discount_percent}% (экономия {price.formatted_savings})
+                    </p>
+                  )}
+                </div>
+
+                <Button disabled={paymentLoading} onClick={() => handleBuyPlan(plan, currency)}>
+                  {price.final_price === 0 ? 'Активировать' : paymentLoading ? 'Загрузка...' : 'Купить'}
+                </Button>
               </div>
-              <p className={styles.price}>{item.formatted_prices.byn}</p>
-            </div>
-            <Button disabled={paymentLoading} onClick={() => handleBuyPlan(item.subscription_type, 'BYN')}>
-              {paymentLoading ? 'Загрузка...' : 'Купить'}
-            </Button>
-          </div>
-        </SwiperSlide>
-      ))}
-    </Swiper>
+            </SwiperSlide>
+          );
+        })}
+      </Swiper>
+      {isPaymentModalOpen && selectedPlan && (
+        <PaymentModal
+          plan={selectedPlan}
+          currency={getCurrencyByLocation(location)}
+          onClose={() => setIsPaymentModalOpen(false)}
+        />
+      )}
+
+      <ToastContainer theme='light' hideProgressBar autoClose={3000} style={{ position: 'absolute' }} />
+    </>
   );
 };

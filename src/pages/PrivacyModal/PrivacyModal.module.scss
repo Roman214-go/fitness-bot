@@ -1,0 +1,82 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.modal {
+  width: 628px;
+  height: 100vh;
+  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+
+  animation: slideUp 0.2s ease-out;
+
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #2a2a2a;
+    border-radius: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #3a3a3a;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.closeButton {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+
+  p {
+    margin-top: 12px;
+    text-align: start;
+    line-height: 1.5;
+  }
+
+  h3 {
+    margin-top: 24px;
+  }
+}

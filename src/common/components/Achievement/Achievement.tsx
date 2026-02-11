@@ -31,7 +31,7 @@ export const Achievement: React.FC<AchievementProps> = ({
         style={{ cursor: 'pointer' }}
       >
         <div className={styles.achievementIcon}>
-          {photoUrl ? <img src={photoUrl} alt={title} className={styles.achievementImage} /> : icon}
+          {photoUrl ? <img src={photoUrl} className={styles.achievementImage} /> : icon}
         </div>
         <h3 className={styles.achievementTitle}>{title}</h3>
       </div>

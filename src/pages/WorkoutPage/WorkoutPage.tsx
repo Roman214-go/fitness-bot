@@ -2,12 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
 import Button from '../../common/components/Button';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
+import { Id, ToastContainer, toast } from 'react-toastify';
 import styles from './WorkoutPage.module.scss';
-import { useCompleteSetMutation, useCompleteWorkoutMutation } from '../TrainingPage/api/getTrainee';
+import {
+  useCompleteExerciseMutation,
+  useCompleteSetMutation,
+  useCompleteWorkoutMutation,
+  useIncompleteExerciseMutation,
+} from '../TrainingPage/api/getTrainee';
 import { FaChevronDown } from 'react-icons/fa';
+import { MdArrowBackIos } from 'react-icons/md';
 
 interface PersonalExercise {
+  id: number;
   name: string;
   reps: number;
   description: string;
@@ -23,6 +30,7 @@ interface PersonalSet {
 }
 
 interface Workout {
+  is_cycle_completed: boolean;
   repetitions: number;
   personal_sets: PersonalSet[];
 }
@@ -30,17 +38,21 @@ interface Workout {
 export const WorkoutPage: React.FC = () => {
   const location = useLocation();
   const { workout, workout_date } = location.state as { workout: Workout; workout_date: { id: number } };
+  const [showNotificationButton, setShowNotificationButton] = useState(workout.is_cycle_completed);
+  const toastIdRef = useRef<Id | null>(null);
 
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const [completeSet, { isLoading: isCompleting }] = useCompleteSetMutation();
   const [completeWorkout, { isLoading: isCompletingWorkout }] = useCompleteWorkoutMutation();
+  const [completeExercise] = useCompleteExerciseMutation();
+  const [incompleteExercise] = useIncompleteExerciseMutation();
 
   const [timer, setTimer] = useState<number>(0);
   const [currentSetIndex, setCurrentSetIndex] = useState<number>(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number>(0);
-  const [weight, setWeight] = useState<string>('');
+  const [weight, setWeight] = useState<string | null>('');
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
 
   const currentSet = workout.personal_sets[currentSetIndex];
@@ -52,6 +64,27 @@ export const WorkoutPage: React.FC = () => {
   const isLastExerciseInSet = currentExerciseIndex === totalExercisesInSet - 1;
   const isLastSet = currentSetIndex === workout.personal_sets.length - 1 && isLastExerciseInSet;
   const timerRef = useRef(null);
+
+  const notificationText =
+    'На этой тренировке следует поднять нагрузку с помощью дополнительного отягощения. Для этого сделайте подъем на один шаг в весе в каждом упражнении. Если в каком-то упражнении Вы не сможете реализовать заданое количество повторений с новой нагрузкой, то оставьте для этого упражнения старое значение веса. Если у Вас появяться какие-либо вопросы, то следует написать тренеру.';
+
+  const showNotification = () => {
+    if (toastIdRef.current) {
+      toast.dismiss(toastIdRef.current);
+    }
+
+    toastIdRef.current = toast(notificationText, {
+      autoClose: 5000,
+      closeButton: true,
+      draggable: false,
+      position: 'bottom-right',
+      onClose: () => {
+        setShowNotificationButton(true);
+      },
+    });
+
+    setShowNotificationButton(false);
+  };
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -75,53 +108,67 @@ export const WorkoutPage: React.FC = () => {
 
   const handleComplete = async () => {
     try {
-      toast('Завершаем упражнение...');
+      await completeExercise({
+        exerciseId: currentExercise.id,
+        weight: weight ? Number(weight) : undefined,
+      }).unwrap();
 
       if (isLastExerciseInSet) {
         await completeSet(currentSet.id).unwrap();
-        toast.success('Сет завершён!');
       }
 
       if (!isLastExerciseInSet) {
-        setCurrentExerciseIndex(currentExerciseIndex + 1);
-        setWeight('');
+        setCurrentExerciseIndex(prev => prev + 1);
       } else if (!isLastSet) {
-        setCurrentSetIndex(currentSetIndex + 1);
+        setCurrentSetIndex(prev => prev + 1);
         setCurrentExerciseIndex(0);
-        setWeight('');
       } else {
-        // теперь используем workout_date.id
-        console.log(workout);
-
         await completeWorkout(workout_date.id).unwrap();
         toast.success('Тренировка завершена!');
         if (timerRef.current) clearInterval(timerRef.current);
-
         setIsCompleted(true);
         setTimeout(() => navigate('/calendar'), 3000);
+        return;
       }
-    } catch (err) {
-      console.error(err);
-      toast.error('Не удалось завершить упражнение или тренировку');
+
+      setWeight('');
+    } catch {
+      toast.error('Не удалось завершить упражнение');
     }
   };
 
-  const handleSkip = () => {
-    if (!isLastExerciseInSet) {
-      setCurrentExerciseIndex(currentExerciseIndex + 1);
-      setWeight('');
-    } else if (!isLastSet) {
-      setCurrentSetIndex(currentSetIndex + 1);
-      setCurrentExerciseIndex(0);
-      setWeight('');
-    } else {
-      setIsCompleted(true);
-      setTimeout(() => navigate('/calendar'), 2500);
+  const handleSkip = async () => {
+    try {
+      await incompleteExercise({ exerciseId: currentExercise.id });
+      if (!isLastExerciseInSet) {
+        setCurrentExerciseIndex(prev => prev + 1);
+      } else if (!isLastSet) {
+        setCurrentSetIndex(prev => prev + 1);
+        setCurrentExerciseIndex(0);
+      } else {
+        await completeWorkout(workout_date.id).unwrap();
+        toast.success('Тренировка завершена!');
+        if (timerRef.current) clearInterval(timerRef.current);
+        setIsCompleted(true);
+        setTimeout(() => navigate('/calendar'), 3000);
+        return;
+      }
+    } catch {
+      toast.error('Не удалось завершить упражнение');
     }
   };
 
   const strokeDasharray = 2 * Math.PI * 63.75;
   const strokeDashoffset = strokeDasharray - (progress / 100) * strokeDasharray;
+
+  useEffect(() => {
+    if (currentExercise?.weight_kg) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setWeight(String(currentExercise.weight_kg));
+    } else {
+      setWeight('');
+    }
+  }, [currentExercise]);
 
   if (isCompleted) {
     return (
@@ -184,20 +231,22 @@ export const WorkoutPage: React.FC = () => {
           </div>
         </div>
 
-        {currentExercise.weight_kg && (
+        <div>
+          <p style={{ color: '#8F9AA2', marginBottom: '10px', fontSize: '14px', textAlign: 'start' }}>
+            При использовании веса в упражнении, введите его ниже в кг
+          </p>
           <div className={styles.weightInput}>
             <input
-              type='text'
+              type='number'
+              min='0'
+              step='0.5'
               placeholder='Введите вес, кг'
               value={weight}
               onChange={e => setWeight(e.target.value)}
               className={styles.input}
             />
-            <button className={styles.weightButton} onClick={() => console.log(weight)}>
-              +
-            </button>
           </div>
-        )}
+        </div>
 
         <div className={styles.progressContainer}>
           <svg className={styles.progressRing} width='150' height='150'>
@@ -235,8 +284,21 @@ export const WorkoutPage: React.FC = () => {
           </Button>
         </div>
       </div>
-
-      <ToastContainer theme='light' hideProgressBar autoClose={3000} style={{ position: 'absolute' }} />
+      <ToastContainer
+        theme='light'
+        hideProgressBar
+        toastStyle={{
+          fontSize: '14px',
+          lineHeight: '1.5',
+          background: '#672dca',
+          color: 'white',
+        }}
+      />
+      {showNotificationButton && (
+        <button className={styles.notificationButton} onClick={showNotification}>
+          <MdArrowBackIos />
+        </button>
+      )}{' '}
     </div>
   );
 };

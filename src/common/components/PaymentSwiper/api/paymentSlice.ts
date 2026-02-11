@@ -1,11 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { CreatePaymentRequest, CreatePaymentResponse } from './paymentApi';
-import { subscriptionPlansApi } from './subscriptionApi';
+import { CreatePaymentRequest, paymentApi } from './paymentApi';
 
 interface PaymentState {
   loading: boolean;
   error: string | null;
-  lastPayment: CreatePaymentResponse | null;
+  lastPayment: any;
 }
 
 const initialState: PaymentState = {
@@ -17,14 +17,13 @@ const initialState: PaymentState = {
 interface CreatePaymentParams {
   userId: number;
   paymentData: CreatePaymentRequest;
-  telegramId: number;
 }
 
-export const createPayment = createAsyncThunk<CreatePaymentResponse, CreatePaymentParams, { rejectValue: string }>(
+export const createPayment = createAsyncThunk<any, CreatePaymentParams, { rejectValue: string }>(
   'payment/create',
-  async ({ userId, paymentData, telegramId }, { rejectWithValue }) => {
+  async ({ userId, paymentData }, { rejectWithValue }) => {
     try {
-      const response = await subscriptionPlansApi.createPayment(userId, paymentData, telegramId);
+      const response = await paymentApi.createPayment(userId, paymentData);
       return response;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -47,7 +46,7 @@ const paymentSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createPayment.fulfilled, (state, action: PayloadAction<CreatePaymentResponse>) => {
+      .addCase(createPayment.fulfilled, (state, action: PayloadAction<any>) => {
         state.loading = false;
         state.lastPayment = action.payload;
       })

@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 
 export interface OnboardingSlideData {
   id: number;
@@ -8,22 +7,6 @@ export interface OnboardingSlideData {
 }
 
 export const onboardingSlides: OnboardingSlideData[] = [
-  {
-    id: 1,
-    title: 'Согласие',
-    text: (
-      <p>
-        Нажимая кнопку «Далее» вы принимаете политику{' '}
-        <Link to='/privacy' style={{ textDecoration: 'underline' }}>
-          обработки персональных данных
-        </Link>{' '}
-        и{' '}
-        <Link to='/privacy' style={{ textDecoration: 'underline' }}>
-          соглашение на их обработку
-        </Link>
-      </p>
-    ),
-  },
   {
     id: 2,
     title: 'Персональная программа тренировок',

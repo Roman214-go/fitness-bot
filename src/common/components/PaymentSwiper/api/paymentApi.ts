@@ -11,23 +11,6 @@ export interface BillingInfo {
   zip_code: string;
 }
 
-export interface CreatePaymentRequest {
-  subscription_type: string;
-  currency: 'BYN' | 'RUB';
-  user_email: string;
-  billing_info: BillingInfo;
-  card_holder: string;
-}
-
-export interface PlanInfo {
-  name: string;
-  description: string;
-  duration_days: number;
-  price: number;
-  currency: string;
-  formatted_price: string;
-}
-
 export interface CreatePaymentResponse {
   success: boolean;
   payment_url: string;
@@ -39,7 +22,48 @@ export interface CreatePaymentResponse {
   plan_info: PlanInfo;
 }
 
-export const subscriptionPlansApi = {
+export interface PlanInfo {
+  name: string;
+  description: string;
+  duration_days: number;
+  price: number;
+  currency: string;
+  formatted_price: string;
+}
+
+export interface CreditCardPayload {
+  number: string;
+  verification_value: string;
+  holder: string;
+  exp_month: string;
+  exp_year: string;
+  token?: string;
+}
+
+export interface CreatePaymentRequest {
+  subscription_type: string;
+  currency: 'BYN' | 'RUB';
+  user_email: string;
+
+  billing_info: {
+    first_name: string;
+    last_name: string;
+    phone: string;
+    country: string;
+    city: string;
+    address: string;
+    zip_code: string;
+  };
+
+  return_url: string;
+  language: 'ru' | 'en';
+
+  credit_card: CreditCardPayload;
+
+  card_holder: string;
+}
+
+export const paymentApi = {
   getAll: async (telegramId: number): Promise<SubscriptionPlansResponse> => {
     const response = await axiosInstance.get<SubscriptionPlansResponse>('/subscription-plans/admin/all', {
       headers: {
@@ -50,22 +74,14 @@ export const subscriptionPlansApi = {
     return response.data;
   },
 
-  createPayment: async (
-    planId: number,
-    paymentData: CreatePaymentRequest,
-    telegramId: number,
-  ): Promise<CreatePaymentResponse> => {
-    const response = await axiosInstance.post<CreatePaymentResponse>(
-      `/subscriptions/${planId}/payment/create`,
-      paymentData,
-      {
-        headers: {
-          accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-Telegram-Auth': JSON.stringify({ telegram_id: telegramId }),
-        },
+  createPayment: async (userId: number, paymentData: CreatePaymentRequest): Promise<CreditCardPayload> => {
+    const response = await axiosInstance.post<CreditCardPayload>(`/subscriptions/${userId}/payment/real`, paymentData, {
+      headers: {
+        accept: 'application/json',
+        'Content-Type': 'application/json',
       },
-    );
+    });
+
     return response.data;
   },
 };

@@ -39,12 +39,12 @@ export const ProfilePage: React.FC = () => {
   }));
 
   useEffect(() => {
-    if (telegramId) {
+    if (telegramId && userData.subscription) {
       dispatch(fetchAchievements({ telegramId, includeInactive: false }));
       dispatch(fetchMyAchievements({ telegramId }));
       dispatch(fetchMyMainAchievement({ telegramId }));
     }
-  }, [dispatch, telegramId]);
+  }, [dispatch, telegramId, userData?.subscription]);
 
   const handleOpenSpeech = () => {
     setIsOpen(true);
@@ -102,7 +102,7 @@ export const ProfilePage: React.FC = () => {
               <div className={styles.editAvatar}>
                 <img
                   className={styles.achievementImage}
-                  src={`${process.env.REACT_APP_BASE_EMPTY_URL}${myMainAchievement?.photo_url}`}
+                  src={`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${myMainAchievement?.photo_url}`}
                 />
               </div>
             ) : null}
@@ -176,26 +176,33 @@ export const ProfilePage: React.FC = () => {
         <div className={styles.coach_speech} onClick={handleOpenSpeech}>
           Наставление тренера
         </div>
-        {userData?.fitness_goals.goal === 'weight_loss' ? <WeightPrediction value={70} /> : null}
-        <h2 className={styles.achievements_title}>Доступные достижения</h2>
+        {userData?.fitness_goals.goal === 'weight_loss' ? (
+          <WeightPrediction value={userData.weight_loss_forecast.target_weight_month} />
+        ) : null}
 
-        {achievementsLoading ? (
-          <div className={styles.achievementsLoading}>Загрузка достижений...</div>
-        ) : (
-          <div className={styles.achievements}>
-            {mergedAchievements.map(item => (
-              <Achievement
-                key={item.id}
-                achievementId={item.id}
-                title={item.name}
-                description={item.description}
-                photoUrl={`${process.env.REACT_APP_BASE_EMPTY_URL}${item.photo_url}`}
-                icon={<LiaAwardSolid fontSize={40} />}
-                isUnlocked={item.isUnlocked}
-              />
-            ))}
-          </div>
-        )}
+        {userData?.subscription ? (
+          <>
+            <h2 className={styles.achievements_title}>Доступные достижения</h2>
+
+            {achievementsLoading ? (
+              <div className={styles.achievementsLoading}>Загрузка достижений...</div>
+            ) : (
+              <div className={styles.achievements}>
+                {mergedAchievements.map(item => (
+                  <Achievement
+                    key={item.id}
+                    achievementId={item.id}
+                    title={item.name}
+                    description={item.description}
+                    photoUrl={`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${item.photo_url}`}
+                    icon={<LiaAwardSolid fontSize={40} />}
+                    isUnlocked={item.isUnlocked}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        ) : null}
 
         <Link
           to='/privacy'

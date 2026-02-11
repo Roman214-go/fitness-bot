@@ -10,8 +10,9 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { userData } = useAppSelector(state => state.auth);
 
-  const { data: upcomingWorkout } = useGetUpcomingWorkoutQuery();
-
+  const { data: upcomingWorkout } = useGetUpcomingWorkoutQuery(undefined, {
+    skip: !userData?.has_workout_plan,
+  });
   const segments = [
     { id: 1, value: userData?.nutrition.proteins, color: '#2563EB', label: 'Белки' },
     { id: 2, value: userData?.nutrition.fats, color: '#F59E0B', label: 'Жиры' },
@@ -41,17 +42,20 @@ const HomePage = () => {
     : 'не назначена';
 
   const totalExercises = upcomingWorkout
-    ? upcomingWorkout.personal_sets?.reduce((sum: number, set: any) => sum + set.personal_exercises.length, 0)
+    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      upcomingWorkout.personal_sets?.reduce((sum: number, set: any) => sum + set.personal_exercises.length, 0)
     : 0;
 
   return (
     <div className={styles.container}>
       <div className={styles.container_trainee}>
         <h2>Начни свою тренировку</h2>
-        <div className={styles.trainee} onClick={handleStartUpcomingWorkout}>
-          <h2>Упражнений: {totalExercises}</h2>
-          <p>Ближайшая тренировка: {formattedDate}</p>
-        </div>
+        {userData?.has_workout_plan ? (
+          <div className={styles.trainee} onClick={handleStartUpcomingWorkout}>
+            <h2>Упражнений: {totalExercises}</h2>
+            <p>Ближайшая тренировка: {formattedDate}</p>
+          </div>
+        ) : null}
       </div>
 
       <CalorieChart totalCalories={userData?.nutrition.calories} segments={segments} />

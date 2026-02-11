@@ -47,6 +47,7 @@ export interface Role {
 }
 
 export interface UserTelegramResponse {
+  weight_loss_forecast: any;
   id: number;
   telegram_id: number;
   username: string;

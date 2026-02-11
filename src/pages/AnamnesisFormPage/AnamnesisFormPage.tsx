@@ -5,7 +5,9 @@ import styles from './AnamnesisFormPage.module.scss';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../common/components/Button';
 import { postAnamnesisData } from './api/postAnamnesisData';
-import { useAppSelector } from '../../common/store/hooks';
+import { useAppDispatch, useAppSelector } from '../../common/store/hooks';
+import { axiosInstance } from '../../common/utils/axiosInstance';
+import { setUserData } from '../../common/auth/authSlice';
 
 export interface AnamnesisFormValues {
   has_varicose_veins: string;
@@ -61,6 +63,7 @@ const validationSchema = Yup.object().shape({
 
 export const AnamnesisFormPage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { userData } = useAppSelector(state => state.auth);
 
   const initialValues: AnamnesisFormValues = {
@@ -85,9 +88,14 @@ export const AnamnesisFormPage: React.FC = () => {
     other_health_problems_description: '',
   };
 
-  const handleSubmit = (values: AnamnesisFormValues) => {
+  const handleSubmit = async (values: AnamnesisFormValues) => {
     if (userData?.telegram_id) {
       postAnamnesisData(values, userData?.telegram_id);
+      const res = await axiosInstance.get(`/users/telegram/${userData?.telegram_id}`, {
+        params: { include_relations: true },
+      });
+
+      dispatch(setUserData(res.data));
       navigate('/');
     }
   };
