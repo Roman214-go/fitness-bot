@@ -13,14 +13,12 @@ export const Paywall = () => {
       <div className={styles.card}>
         <div className={styles.lock}>🔒</div>
         <h3>
-          {userData?.subscription.status !== 'active'
+          {!userData?.subscription
             ? 'Пожалуйста приобретите подписку'
             : 'Ваша программа тренировок уже создается, подождите'}
         </h3>
         <p>чтобы воспользоваться этой функцией</p>
-        {userData?.subscription.status !== 'active' ? (
-          <Button onClick={() => navigate('/onboarding')}>Перейти</Button>
-        ) : null}
+        {!userData?.subscription ? <Button onClick={() => navigate('/onboarding')}>Перейти</Button> : null}
       </div>
     </div>
   );
