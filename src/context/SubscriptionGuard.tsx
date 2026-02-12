@@ -14,7 +14,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
   return (
     <>
       {children}
-      {(!userData?.subscription || !userData.has_workout_plan) && <Paywall />}
+      {(userData?.subscription.status !== 'active' || !userData.has_workout_plan) && <Paywall />}
     </>
   );
 };

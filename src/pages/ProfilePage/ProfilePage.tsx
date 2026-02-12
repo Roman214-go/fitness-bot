@@ -6,7 +6,7 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 import styles from './ProfilePage.module.scss';
 import Button from '../../common/components/Button';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { WeightPrediction } from '../../common/components/WeightScale/WeightScale';
 import { Achievement } from '../../common/components/Achievement/Achievement';
 import { LiaAwardSolid } from 'react-icons/lia';
@@ -14,12 +14,15 @@ import { useAppSelector, useAppDispatch } from '../../common/store/hooks';
 import { coachSpeech } from '../../common/constants/coachSpeech';
 import { fetchAchievements, fetchMyAchievements, fetchMyMainAchievement } from './api/achievementsSlice';
 import { process } from '../../common/constants/process';
+import { PrivacyModal } from '../PrivacyModal/PrivacyModal';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [currentSpeech, setCurrentSpeech] = useState(0);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [privacyId, setPrivacyId] = useState(0);
 
   const { userData } = useAppSelector(state => state.auth);
   const {
@@ -39,7 +42,7 @@ export const ProfilePage: React.FC = () => {
   }));
 
   useEffect(() => {
-    if (telegramId && userData.subscription) {
+    if (telegramId && userData.subscription.status === 'active') {
       dispatch(fetchAchievements({ telegramId, includeInactive: false }));
       dispatch(fetchMyAchievements({ telegramId }));
       dispatch(fetchMyMainAchievement({ telegramId }));
@@ -144,7 +147,6 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           <h2>{userData?.first_name}</h2>
-          <p className={styles.subtitle}>Уровень подписки</p>
         </div>
         <div className={styles.statsGrid}>
           <div className={styles.statItem}>
@@ -218,7 +220,7 @@ export const ProfilePage: React.FC = () => {
           <WeightPrediction value={userData.weight_loss_forecast.target_weight_month} />
         ) : null}
 
-        {userData?.subscription ? (
+        {userData?.subscription.status === 'active' ? (
           <>
             <h2 className={styles.achievements_title}>Доступные достижения</h2>
 
@@ -242,12 +244,34 @@ export const ProfilePage: React.FC = () => {
           </>
         ) : null}
 
-        <Link
-          to='/privacy'
+        <p
           style={{ color: '#4e4e4e', marginTop: '20px', textAlign: 'right', textDecoration: 'underline' }}
+          onClick={() => {
+            setPrivacyId(1);
+            setIsPrivacyOpen(true);
+          }}
         >
-          Политика конфиденциальности
-        </Link>
+          Политика обработки и защиты персональных данных
+        </p>
+        <p
+          style={{ color: '#4e4e4e', textAlign: 'right', textDecoration: 'underline' }}
+          onClick={() => {
+            setPrivacyId(2);
+            setIsPrivacyOpen(true);
+          }}
+        >
+          Согласие на обработку персональных данных
+        </p>
+        <p
+          style={{ color: '#4e4e4e', textAlign: 'right', textDecoration: 'underline' }}
+          onClick={() => {
+            setPrivacyId(3);
+            setIsPrivacyOpen(true);
+          }}
+        >
+          Договор оферты
+        </p>
+        {isPrivacyOpen && <PrivacyModal id={privacyId} onClose={() => setIsPrivacyOpen(false)} />}
       </div>
     </div>
   );
