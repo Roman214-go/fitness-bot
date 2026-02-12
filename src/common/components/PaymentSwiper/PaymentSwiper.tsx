@@ -19,6 +19,7 @@ import { axiosInstance } from '../../utils/axiosInstance';
 import { setUserData } from '../../auth/authSlice';
 import { toast, ToastContainer } from 'react-toastify';
 import { PaymentModal } from './PaymentModal';
+import Loader from '../Loader';
 
 export const PaymentSwiper = () => {
   const dispatch = useAppDispatch();
@@ -73,7 +74,7 @@ export const PaymentSwiper = () => {
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           !userData.body_photos
             ? navigate('/main-form')
-            : !userData.anthropometric_data
+            : !userData.medical_history
               ? navigate('/anamnesis-form')
               : navigate('/');
         }
@@ -88,23 +89,11 @@ export const PaymentSwiper = () => {
   };
 
   if (loading) {
-    return <div className={styles.loading}>Загрузка планов...</div>;
+    return <Loader />;
   }
 
   if (error) {
-    return <div className={styles.error}>Ошибка: {error}</div>;
-  }
-
-  if (plans.length === 0) {
-    return <div className={styles.empty}>Нет доступных планов</div>;
-  }
-
-  if (loading) {
-    return <div className={styles.loading}>Загрузка планов...</div>;
-  }
-
-  if (error) {
-    return <div className={styles.error}>Ошибка: {error}</div>;
+    throw new Error(error);
   }
 
   if (plans.length === 0) {

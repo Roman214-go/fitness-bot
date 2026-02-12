@@ -117,8 +117,7 @@ export const ProfilePage: React.FC = () => {
 
       window.open(adminUrl, '_blank');
     } catch (error) {
-      console.error('Ошибка при открытии админ панели:', error);
-      alert('Произошла ошибка при открытии админ панели');
+      alert(`Произошла ошибка при открытии админ панели: ${error}`);
     }
   };
 
@@ -179,7 +178,9 @@ export const ProfilePage: React.FC = () => {
             <div className={styles.trainee_labelContainer}>
               <p>Срок подписки</p>
             </div>
-            <p style={{ color: '#E2F163' }}>дд.мм.гггг</p>
+            <p style={{ color: '#E2F163' }}>
+              {userData?.subscription?.end_date ? dayjs(userData.subscription.end_date).format('DD.MM.YYYY') : '—'}
+            </p>
           </div>
           <div className={styles.trainee}>
             <div className={styles.trainee_labelContainer}>

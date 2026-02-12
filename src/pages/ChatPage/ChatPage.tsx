@@ -19,11 +19,6 @@ export const ChatPage: React.FC = () => {
 
   const currentUser = {
     telegram_id: userData?.telegram_id,
-    first_name: 'Test User',
-    username: null,
-    last_name: null,
-    photo_url: null,
-    language_code: 'ru',
   };
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);

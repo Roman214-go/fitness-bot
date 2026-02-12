@@ -16,7 +16,7 @@ export const Onboarding = () => {
 
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [privacyId, setPrivacyId] = useState(0);
-  const [activeIndex, setActiveIndex] = useState(userData?.anthropometric_data && userData.body_photos ? 5 : 0);
+  const [activeIndex, setActiveIndex] = useState(userData?.medical_history && userData.body_photos ? 5 : 0);
   const navigate = useNavigate();
 
   const slides = useMemo(() => {
@@ -65,11 +65,16 @@ export const Onboarding = () => {
   };
 
   const finishOnboarding = () => {
-    if (userData?.anthropometric_data && userData.body_photos) {
+    if (userData?.medical_history && userData.body_photos) {
       navigate('/');
       return;
     }
-    navigate('/main-form', { replace: true });
+    if (!userData?.medical_history) {
+      navigate('/anamnesis-form');
+    }
+    if (!userData?.body_photos) {
+      navigate('/main-form', { replace: true });
+    }
   };
 
   return (

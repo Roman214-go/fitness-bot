@@ -4,7 +4,7 @@ import { useAppSelector } from '../../store/hooks';
 export const ProtectedRoute = () => {
   const { userData } = useAppSelector(state => state.auth);
 
-  if (userData?.anthropometric_data && userData.body_photos) {
+  if (userData?.medical_history && userData.body_photos) {
     return <Navigate to='/' replace />;
   }
 

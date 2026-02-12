@@ -16,7 +16,6 @@ export const postPhysicalData = async (payload: MainFormValues, telegramId: numb
   formData.append('back_pain_relief', String(payload.healthy_goal?.includes('back_pain_relief')));
   formData.append('workout_format', payload.workout_format);
   formData.append('workouts_per_week', String(payload.workouts_per_week));
-  formData.append('health_limitation', payload.health_limitation ?? '');
 
   if (payload.photos.front_photo) {
     formData.append('front_photo', payload.photos.front_photo);

@@ -27,14 +27,12 @@ export const AdminChatPage: React.FC = () => {
   const { userData } = useAppSelector(state => state.auth);
   const [loading, setLoading] = useState(true);
   const [loadingChats, setLoadingChats] = useState(false);
+  const [chatsPage, setChatsPage] = useState(1);
+  const [chatsPerPage] = useState(20);
+  const [hasMoreChats, setHasMoreChats] = useState(true);
 
   const currentUser = {
     telegram_id: userData?.telegram_id,
-    first_name: userData?.first_name || 'Admin User',
-    username: userData?.username || null,
-    last_name: userData?.last_name || null,
-    photo_url: userData?.photo_url || null,
-    language_code: userData?.language_code || 'ru',
   };
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -56,14 +54,19 @@ export const AdminChatPage: React.FC = () => {
   /* =======================
      Загрузка списка чатов
   ======================= */
-  const loadChats = async () => {
+  const loadChats = async (page = 1) => {
+    if (!hasMoreChats && page !== 1) return;
+
     setLoadingChats(true);
     try {
-      const res = await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/list?per_page=50`, {
-        headers: {
-          'X-Telegram-Auth': JSON.stringify(currentUser),
+      const res = await fetch(
+        `${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/list?page=${page}&per_page=${chatsPerPage}`,
+        {
+          headers: {
+            'X-Telegram-Auth': JSON.stringify(currentUser),
+          },
         },
-      });
+      );
 
       if (!res.ok) {
         console.error('Ошибка загрузки чатов');
@@ -71,12 +74,26 @@ export const AdminChatPage: React.FC = () => {
       }
 
       const data = await res.json();
-      setChatsList(data.chats || []);
+
+      if (page === 1) {
+        setChatsList(data.chats || []);
+      } else {
+        setChatsList(prev => [...prev, ...(data.chats || [])]);
+      }
+
+      setHasMoreChats(data.chats?.length === chatsPerPage); // если меньше чем per_page, значит больше нет
+      setChatsPage(page);
     } catch (e) {
       console.error('loadChats error', e);
     } finally {
       setLoadingChats(false);
     }
+  };
+
+  const handleRefreshChats = () => {
+    setChatsPage(1);
+    setHasMoreChats(true);
+    loadChats(1);
   };
 
   /* =======================
@@ -375,7 +392,7 @@ export const AdminChatPage: React.FC = () => {
       <div className={styles.chats_sidebar}>
         <div className={styles.sidebar_header}>
           <h3>Чаты пользователей</h3>
-          <button className={styles.refresh_button} onClick={loadChats} disabled={loadingChats}>
+          <button className={styles.refresh_button} onClick={handleRefreshChats} disabled={loadingChats}>
             {loadingChats ? '⟳' : '↻'}
           </button>
         </div>
@@ -402,6 +419,15 @@ export const AdminChatPage: React.FC = () => {
                 )}
               </div>
             ))
+          )}
+          {hasMoreChats && (
+            <button
+              className={styles.load_more_button}
+              onClick={() => loadChats(chatsPage + 1)}
+              disabled={loadingChats}
+            >
+              {loadingChats ? '⟳' : 'Загрузить ещё'}
+            </button>
           )}
         </div>
       </div>

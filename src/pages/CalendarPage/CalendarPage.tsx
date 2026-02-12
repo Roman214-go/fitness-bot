@@ -201,7 +201,7 @@ export const CalendarPage: React.FC = () => {
     };
 
     fetchWorkouts();
-  }, [userData?.telegram_id]);
+  }, [userData?.personal_workout_plan, userData?.telegram_id]);
 
   return (
     <div className='workout-calendar'>

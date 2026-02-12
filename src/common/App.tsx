@@ -21,6 +21,7 @@ import { HomeworkPage } from '../pages/HomeworkPage/HomeworkPage';
 import styles from './App.module.scss';
 import { useAppSelector } from './store/hooks';
 import { AdminChatPage } from '../pages/ChatPage/AdminChatPage';
+import { ErrorBoundary } from '../pages/ErrorBoundary/ErrorBoundary';
 
 const App = () => {
   const [authLoaded, setAuthLoaded] = useState(false);
@@ -31,45 +32,47 @@ const App = () => {
   }
 
   return (
-    <div className={styles.main_container}>
-      <OnboardingGuard>
-        <Routes>
-          <Route path='/onboarding' element={<Onboarding />} />
-          <Route path='/main-form' element={<MainFormPage />} />
-          <Route path='/anamnesis-form' element={<AnamnesisFormPage />} />
+    <ErrorBoundary>
+      <div className={styles.main_container}>
+        <OnboardingGuard>
+          <Routes>
+            <Route path='/onboarding' element={<Onboarding />} />
+            <Route path='/main-form' element={<MainFormPage />} />
+            <Route path='/anamnesis-form' element={<AnamnesisFormPage />} />
 
-          <Route element={<Layout />}>
-            <Route path='/' element={<HomePage />} />
-            <Route
-              path='/calendar'
-              element={
-                <SubscriptionGuard>
-                  <CalendarPage />
-                </SubscriptionGuard>
-              }
-            />
-            <Route path='/leaders' element={<LeadersPage />} />
-            <Route
-              path='/chat'
-              element={
-                userData?.role.name === 'admin' ? (
-                  <AdminChatPage />
-                ) : (
+            <Route element={<Layout />}>
+              <Route path='/' element={<HomePage />} />
+              <Route
+                path='/calendar'
+                element={
                   <SubscriptionGuard>
-                    <ChatPage />
+                    <CalendarPage />
                   </SubscriptionGuard>
-                )
-              }
-            />
-            <Route path='/profile' element={<ProfilePage />} />
-          </Route>
-          <Route path='/profile-edit' element={<ProfileEditPage />} />
-          <Route path='/training/:date' element={<TrainingPage />} />
-          <Route path='/workout/:date' element={<WorkoutPage />} />
-          <Route path='/homework' element={<HomeworkPage />} />
-        </Routes>
-      </OnboardingGuard>
-    </div>
+                }
+              />
+              <Route path='/leaders' element={<LeadersPage />} />
+              <Route
+                path='/chat'
+                element={
+                  userData?.role.name === 'admin' ? (
+                    <AdminChatPage />
+                  ) : (
+                    <SubscriptionGuard>
+                      <ChatPage />
+                    </SubscriptionGuard>
+                  )
+                }
+              />
+              <Route path='/profile' element={<ProfilePage />} />
+            </Route>
+            <Route path='/profile-edit' element={<ProfileEditPage />} />
+            <Route path='/training/:date' element={<TrainingPage />} />
+            <Route path='/workout/:date' element={<WorkoutPage />} />
+            <Route path='/homework' element={<HomeworkPage />} />
+          </Routes>
+        </OnboardingGuard>
+      </div>
+    </ErrorBoundary>
   );
 };
 

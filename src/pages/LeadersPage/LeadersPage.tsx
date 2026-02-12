@@ -91,6 +91,7 @@ export const LeadersPage: React.FC = () => {
               )}
               <div className={getBadgeClass(user.position)}>{user.position}</div>
             </div>
+            <p style={{ fontSize: '12px', marginTop: '10px' }}>{user.total_points} очков</p>
           </div>
         ))}
       </div>

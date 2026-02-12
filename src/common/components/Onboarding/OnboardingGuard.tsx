@@ -10,9 +10,6 @@ interface OnboardingGuardProps {
 export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   const location = useLocation();
   const { authData, userData } = useAppSelector(state => state.auth);
-  // if (isLoading) {
-  //   return <Loader />;
-  // }
 
   if (!authData || !userData) {
     return <>{children}</>;
@@ -20,7 +17,9 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
 
   const pathname = location.pathname;
 
-  if (!userData.anthropometric_data && !userData.body_photos) {
+  if (!userData.medical_history || !userData.body_photos) {
+    console.log(1);
+
     if (pathname !== '/main-form' && pathname !== '/anamnesis-form') {
       if (pathname !== '/onboarding') {
         return <Navigate to='/onboarding' replace />;
@@ -35,7 +34,7 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
       return <>{children}</>;
     }
 
-    if (userData.body_photos && !userData.anthropometric_data) {
+    if (userData.body_photos && !userData.medical_history) {
       if (pathname !== '/anamnesis-form') {
         return <Navigate to='/anamnesis-form' replace />;
       }

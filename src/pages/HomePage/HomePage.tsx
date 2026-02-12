@@ -5,10 +5,42 @@ import styles from './HomePage.module.scss';
 import { useAppSelector } from '../../common/store/hooks';
 import dayjs from 'dayjs';
 import { ToastContainer, toast } from 'react-toastify';
+import { useState } from 'react';
+import blocksImg from '../../assets/equipment/blocksImg.jpg';
+import dumbbellsImg from '../../assets/equipment/dumbbellsImg.jpg';
+import matImg from '../../assets/equipment/matImg.jpg';
+import bandImg from '../../assets/equipment/bandImg.jpg';
+import trxImg from '../../assets/equipment/trxImg.jpg';
+import Button from '../../common/components/Button';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { userData } = useAppSelector(state => state.auth);
+  const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+
+  const equipment = [
+    {
+      img: blocksImg,
+      label: 'Блоки для йоги',
+    },
+    {
+      img: dumbbellsImg,
+      label: 'Гантели',
+    },
+    {
+      img: bandImg,
+      label: 'Фитнес-резинки',
+    },
+    {
+      img: trxImg,
+      label: 'Подвесные тренировочные петли',
+    },
+    {
+      img: matImg,
+      label: 'Коврик для тренировок',
+    },
+  ];
 
   const { data: upcomingWorkout } = useGetUpcomingWorkoutQuery(undefined, {
     skip: !userData?.has_workout_plan,
@@ -49,14 +81,48 @@ const HomePage = () => {
   return (
     <div className={styles.container}>
       <div className={styles.container_trainee}>
-        <h2>Начни свою тренировку</h2>
         {userData?.has_workout_plan ? (
-          <div className={styles.trainee} onClick={handleStartUpcomingWorkout}>
-            <h2>Упражнений: {totalExercises}</h2>
-            <p>Ближайшая тренировка: {formattedDate}</p>
-          </div>
+          <>
+            <h2>Начни свою тренировку</h2>
+            <div className={styles.trainee} onClick={handleStartUpcomingWorkout}>
+              <h2>Упражнений: {totalExercises}</h2>
+              <p>Ближайшая тренировка: {formattedDate}</p>
+            </div>
+          </>
+        ) : null}
+        {!userData?.has_workout_plan && userData?.subscription && userData.fitness_goals.workout_format === 'home' ? (
+          <Button buttonType='secondary' onClick={() => setIsEquipmentOpen(true)}>
+            Необходимый инвентарь для тренировок
+          </Button>
         ) : null}
       </div>
+      {activeImage && (
+        <div className={styles.imageOverlay} onClick={() => setActiveImage(null)}>
+          <div className={styles.imageModal} onClick={e => e.stopPropagation()}>
+            <img src={activeImage} alt='Инвентарь' />
+            <button className={styles.imageClose} onClick={() => setActiveImage(null)}>
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+      {isEquipmentOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsEquipmentOpen(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <h3>Инвентарь для тренировок</h3>
+            <div className={styles.equipmentGrid}>
+              {equipment.map((item, index) => (
+                <div key={index} className={styles.equipmentItem}>
+                  <img src={item.img} alt={item.label} onClick={() => setActiveImage(item.img)} />{' '}
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <Button onClick={() => setIsEquipmentOpen(false)}>Закрыть</Button>
+          </div>
+        </div>
+      )}
 
       <CalorieChart totalCalories={userData?.nutrition.calories} segments={segments} />
 

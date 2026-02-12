@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Formik, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import styles from './AnamnesisFormPage.module.scss';
@@ -65,6 +65,7 @@ export const AnamnesisFormPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { userData } = useAppSelector(state => state.auth);
+  const [isLoadingButton, setIsLoadingButton] = useState(false);
 
   const initialValues: AnamnesisFormValues = {
     has_varicose_veins: '',
@@ -90,13 +91,16 @@ export const AnamnesisFormPage: React.FC = () => {
 
   const handleSubmit = async (values: AnamnesisFormValues) => {
     if (userData?.telegram_id) {
+      setIsLoadingButton(true);
       postAnamnesisData(values, userData?.telegram_id);
-      const res = await axiosInstance.get(`/users/telegram/${userData?.telegram_id}`, {
-        params: { include_relations: true },
-      });
+      setTimeout(async () => {
+        const res = await axiosInstance.get(`/users/telegram/${userData?.telegram_id}`, {
+          params: { include_relations: true },
+        });
 
-      dispatch(setUserData(res.data));
-      navigate('/');
+        dispatch(setUserData(res.data));
+        navigate('/');
+      }, 1000);
     }
   };
 
@@ -402,7 +406,9 @@ export const AnamnesisFormPage: React.FC = () => {
               )}
             </div>
 
-            <Button type='submit'>Далее</Button>
+            <Button isLoading={isLoadingButton} type='submit'>
+              Далее
+            </Button>
           </form>
         )}
       </Formik>

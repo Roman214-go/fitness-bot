@@ -7,6 +7,8 @@ import styles from './HomeworkPage.module.scss';
 import { useCompleteSetMutation, useCompleteWorkoutMutation } from '../TrainingPage/api/getTrainee';
 import { FaChevronDown } from 'react-icons/fa';
 import { useGetAllHomeworkQuery } from './api/getHomework';
+import { ErrorScreen } from '../ErrorScreen/ErrorScreen';
+import Loader from '../../common/components/Loader';
 
 export const HomeworkPage: React.FC = () => {
   const { data: homeworkData, isLoading, error } = useGetAllHomeworkQuery();
@@ -35,9 +37,10 @@ export const HomeworkPage: React.FC = () => {
       }
     };
   }, []);
-  if (isLoading) return <p>Загрузка...</p>;
-  if (error) return <p>Ошибка при загрузке данных</p>;
-  if (!homeworkData || homeworkData.length === 0) return <p>Домашнее задание отсутствует</p>;
+  if (isLoading) return <Loader />;
+  if (error) return <ErrorScreen isBackButton message={'Ошибка получения домашнего задания'} />;
+  if (!homeworkData || homeworkData.length === 0)
+    return <ErrorScreen isBackButton message={'Домашнее задание отсутствует'} />;
 
   const currentHomework = homeworkData[currentHomeworkIndex];
   const currentExercise = currentHomework.personal_exercises[currentExerciseIndex];

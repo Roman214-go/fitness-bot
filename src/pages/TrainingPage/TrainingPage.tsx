@@ -8,6 +8,8 @@ import Button from '../../common/components/Button';
 import { useGetWorkoutByDateQuery } from './api/getTrainee';
 import { toast, ToastContainer, Id } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ErrorScreen } from '../ErrorScreen/ErrorScreen';
+import Loader from '../../common/components/Loader';
 
 interface ExerciseView {
   id: number;
@@ -52,8 +54,8 @@ export const TrainingPage: React.FC = () => {
     }
   }, [data]);
 
-  if (isLoading) return <div className={styles.container}>Загрузка...</div>;
-  if (isError || !data?.workout) return <div className={styles.container}>Тренировка не найдена</div>;
+  if (isLoading) return <Loader />;
+  if (isError || !data?.workout) return <ErrorScreen isBackButton message={'Тренировка не найдена'} />;
 
   const workout = data.workout;
 
