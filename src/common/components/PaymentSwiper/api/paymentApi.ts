@@ -1,5 +1,4 @@
 import { axiosInstance } from '../../../utils/axiosInstance';
-import { SubscriptionPlansResponse } from './subscriptionApi';
 
 export interface BillingInfo {
   first_name: string;
@@ -64,16 +63,6 @@ export interface CreatePaymentRequest {
 }
 
 export const paymentApi = {
-  getAll: async (telegramId: number): Promise<SubscriptionPlansResponse> => {
-    const response = await axiosInstance.get<SubscriptionPlansResponse>('/subscription-plans/admin/all', {
-      headers: {
-        accept: 'application/json',
-        'X-Telegram-Auth': JSON.stringify({ telegram_id: telegramId }),
-      },
-    });
-    return response.data;
-  },
-
   createPayment: async (userId: number, paymentData: CreatePaymentRequest): Promise<CreditCardPayload> => {
     const response = await axiosInstance.post<CreditCardPayload>(`/subscriptions/${userId}/payment/real`, paymentData, {
       headers: {

@@ -84,6 +84,41 @@ export const ProfilePage: React.FC = () => {
 
   const currentSpeechs = speechesForUser[currentSpeech] || null;
 
+  const openFitnessAdminPanel = () => {
+    try {
+      if (!window.Telegram?.WebApp) {
+        alert('Эта функция доступна только в Telegram');
+        return;
+      }
+
+      const tg = window.Telegram.WebApp;
+      const user = tg.initDataUnsafe?.user;
+
+      if (!user) {
+        alert('Не удалось получить данные пользователя из Telegram');
+        return;
+      }
+
+      const authData = {
+        telegram_id: user.id,
+        username: user.username || null,
+        first_name: user.first_name || 'Name',
+        last_name: user.last_name || null,
+        language_code: user.language_code || 'ru',
+      };
+
+      const token = encodeURIComponent(JSON.stringify(authData));
+
+      const baseUrl = window.location.origin;
+      const adminUrl = `${baseUrl}/api/admin/users/dashboard?token=${token}`;
+
+      window.open(adminUrl, '_blank');
+    } catch (error) {
+      console.error('Ошибка при открытии админ панели:', error);
+      alert('Произошла ошибка при открытии админ панели');
+    }
+  };
+
   return (
     <div className={styles.profilePage}>
       <div className={styles.profileContent}>
@@ -111,7 +146,6 @@ export const ProfilePage: React.FC = () => {
           <h2>{userData?.first_name}</h2>
           <p className={styles.subtitle}>Уровень подписки</p>
         </div>
-
         <div className={styles.statsGrid}>
           <div className={styles.statItem}>
             <div className={styles.statValue}>{userData?.anthropometric_data.age} лет</div>
@@ -126,7 +160,11 @@ export const ProfilePage: React.FC = () => {
             <div className={styles.statLabel}>Вес</div>
           </div>
         </div>
-
+        {userData?.role.name === 'admin' ? (
+          <button className={styles.adminLink} onClick={openFitnessAdminPanel}>
+            Перейти на админ панель
+          </button>
+        ) : null}
         <div className={styles.trainees}>
           <div className={styles.trainee}>
             <div className={styles.trainee_labelContainer}>
