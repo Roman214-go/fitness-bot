@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from './ProfileEditPage.module.scss';
 import { useNavigate } from 'react-router-dom';
 import { MdArrowBackIos } from 'react-icons/md';
@@ -45,13 +45,16 @@ const ProfileEditPage: React.FC = () => {
     { value: 'weight_loss', label: 'Похудение' },
   ];
 
-  //TODO: Update updating photos
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
-      const localUrl = URL.createObjectURL(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
 
       const formData = new FormData();
       formData.append('photo', file);
@@ -70,11 +73,21 @@ const ProfileEditPage: React.FC = () => {
       });
 
       dispatch(setUserData(res.data));
-      setPhotoUrl(localUrl);
+
+      setPhotoUrl(`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${res.data.photo_url}`);
     } catch (e) {
-      console.error(e);
+      console.error('Ошибка загрузки фото:', e);
+      setPhotoUrl(null);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (photoUrl && photoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(photoUrl);
+      }
+    };
+  }, [photoUrl]);
 
   return (
     <div className={styles.container}>
@@ -88,7 +101,6 @@ const ProfileEditPage: React.FC = () => {
 
         <input
           ref={fileInputRef}
-          capture='environment'
           type='file'
           accept='image/*'
           style={{ display: 'none' }}

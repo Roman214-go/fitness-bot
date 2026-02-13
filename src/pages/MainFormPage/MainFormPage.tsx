@@ -7,7 +7,7 @@ import { postPhysicalData } from './api/postPhysicalData';
 import { setUserData } from '../../common/auth/authSlice';
 import { axiosInstance } from '../../common/utils/axiosInstance';
 import { useAppDispatch, useAppSelector } from '../../common/store/hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PrivacyModal } from '../PrivacyModal/PrivacyModal';
 import front from '../../assets/bodyPhotos/front.jpg';
 import back from '../../assets/bodyPhotos/back.jpg';
@@ -80,6 +80,12 @@ export const MainFormPage = () => {
   const { userData } = useAppSelector(state => state.auth);
 
   const dispatch = useAppDispatch();
+  const [photoPreviews, setPhotoPreviews] = useState<Record<PhotoKey, string | null>>({
+    front_photo: null,
+    back_photo: null,
+    left_front_photo: null,
+    left_incline_photo: null,
+  });
 
   const photosConfig: {
     key: PhotoKey;
@@ -148,6 +154,16 @@ export const MainFormPage = () => {
     }),
   });
 
+  useEffect(() => {
+    return () => {
+      Object.values(photoPreviews).forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [photoPreviews]);
+
   const handleSubmit = async (values: MainFormValues) => {
     if (userData?.telegram_id) {
       await postPhysicalData(values, userData?.telegram_id);
@@ -182,20 +198,26 @@ export const MainFormPage = () => {
       return;
     }
 
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreviews(prev => ({
+        ...prev,
+        [photoType]: reader.result as string,
+      }));
+    };
+    reader.readAsDataURL(file);
+
     setFieldValue(`photos.${photoType}`, file);
   };
 
-  const getPhotoPreview = (photo: File | null): string | null => {
-    if (photo) {
-      return URL.createObjectURL(photo);
-    }
-    return null;
+  const getPhotoPreview = (photoKey: PhotoKey): string | null => {
+    return photoPreviews[photoKey];
   };
 
   return (
     <>
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        {({ values, setFieldValue, setFieldError, errors, touched }) => (
+        {({ setFieldValue, setFieldError, errors, touched }) => (
           <Form className={styles.trainingForm}>
             {/* Пол */}
             <div className={`${styles.formSection} ${errors.gender && touched.gender ? styles.hasError : ''}`}>
@@ -377,7 +399,7 @@ export const MainFormPage = () => {
               <div className={styles.photoGrid}>
                 {photosConfig.map(item => {
                   const photoKey = item.key as keyof MainFormValues['photos'];
-                  const preview = getPhotoPreview(values.photos[photoKey]);
+                  const preview = getPhotoPreview(photoKey);
 
                   return (
                     <div key={item.key}>
@@ -388,14 +410,7 @@ export const MainFormPage = () => {
                           accept='image/*'
                           style={{ display: 'none' }}
                           capture='environment'
-                          onChange={e =>
-                            handlePhotoUpload(
-                              item.key as keyof MainFormValues['photos'],
-                              e,
-                              setFieldValue,
-                              setFieldError,
-                            )
-                          }
+                          onChange={e => handlePhotoUpload(photoKey, e, setFieldValue, setFieldError)}
                         />
                         <label htmlFor={`photo-${item.key}`} className={styles.photoLabel}>
                           {preview ? (
@@ -408,7 +423,7 @@ export const MainFormPage = () => {
                       <span className={styles.photoLabelText}>{item.label}</span>
                       {errors.photos?.[item.key] && touched.photos?.[photoKey] && (
                         <div className={styles.error}>{errors.photos[item.key]}</div>
-                      )}{' '}
+                      )}
                     </div>
                   );
                 })}

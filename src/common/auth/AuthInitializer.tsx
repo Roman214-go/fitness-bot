@@ -13,28 +13,28 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // const fetchTelegramPhotoAsFile = async (photoUrl: string): Promise<File> => {
-  //   const response = await fetch(photoUrl);
-  //   const blob = await response.blob();
+  const fetchTelegramPhotoAsFile = async (photoUrl: string): Promise<File> => {
+    const response = await fetch(photoUrl);
+    const blob = await response.blob();
 
-  //   return new File([blob], 'telegram_avatar.jpg', {
-  //     type: blob.type || 'image/jpeg',
-  //   });
-  // };
+    return new File([blob], 'telegram_avatar.jpg', {
+      type: blob.type || 'image/jpeg',
+    });
+  };
 
-  // const uploadTelegramPhoto = async (telegramId: number, photoUrl: string) => {
-  //   const file = await fetchTelegramPhotoAsFile(photoUrl);
+  const uploadTelegramPhoto = async (telegramId: number, photoUrl: string) => {
+    const file = await fetchTelegramPhotoAsFile(photoUrl);
 
-  //   const formData = new FormData();
-  //   formData.append('photo', file);
+    const formData = new FormData();
+    formData.append('photo', file);
 
-  //   await axiosInstance.put('/profile/me/photo', formData, {
-  //     headers: {
-  //       'Content-Type': 'multipart/form-data',
-  //       'X-Telegram-Auth': JSON.stringify({ telegram_id: telegramId }),
-  //     },
-  //   });
-  // };
+    await axiosInstance.put('/profile/me/photo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'X-Telegram-Auth': JSON.stringify({ telegram_id: telegramId }),
+      },
+    });
+  };
 
   useEffect(() => {
     const initAuth = async () => {
@@ -58,9 +58,9 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
 
         dispatch(setUserData(res.data));
 
-        // if (telegramUser?.photo_url && !res.data.photo_url) {
-        //   await uploadTelegramPhoto(telegramUser.id, telegramUser.photo_url);
-        // }
+        if (telegramUser?.photo_url && !res.data.photo_url) {
+          await uploadTelegramPhoto(telegramUser.id, telegramUser.photo_url);
+        }
 
         setLoading(false);
         onAuthLoaded();
