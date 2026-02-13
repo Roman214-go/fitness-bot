@@ -198,7 +198,8 @@ export const WorkoutPage: React.FC = () => {
           <div
             className={styles.exerciseName}
             style={{
-              maxHeight: open ? '1200px' : '10px',
+              maxHeight: open ? '1200px' : '100px',
+              overflowY: 'auto',
             }}
           >
             <p>{currentExercise.name}</p>
@@ -222,12 +223,12 @@ export const WorkoutPage: React.FC = () => {
           <div
             style={{
               maxHeight: open ? '200px' : '0',
-              overflow: 'hidden',
+              overflow: 'auto',
               transition: 'max-height 0.3s ease',
               marginTop: '8px',
             }}
           >
-            <p style={{ color: '#8F9AA2', textAlign: 'start', lineHeight: 2 }}>{currentExercise.description}</p>
+            <p style={{ color: '#8F9AA2', textAlign: 'start', lineHeight: 1.2 }}>{currentExercise.description}</p>
           </div>
         </div>
 

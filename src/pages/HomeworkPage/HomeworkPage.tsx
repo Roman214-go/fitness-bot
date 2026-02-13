@@ -122,7 +122,13 @@ export const HomeworkPage: React.FC = () => {
         <ReactPlayer controls style={{ width: '100%', height: '35vh' }} src={currentExercise.video_url} />
 
         <div className={styles.exerciseContainer}>
-          <div className={styles.exerciseName} style={{ maxHeight: open ? '1200px' : '10px' }}>
+          <div
+            className={styles.exerciseName}
+            style={{
+              maxHeight: open ? '1200px' : '100px',
+              overflowY: 'auto',
+            }}
+          >
             <p>{currentExercise.name}</p>
             <div onClick={() => setOpen(!open)} style={{ cursor: 'pointer' }}>
               <FaChevronDown
@@ -139,12 +145,16 @@ export const HomeworkPage: React.FC = () => {
           <div
             style={{
               maxHeight: open ? '200px' : '0',
-              overflow: 'hidden',
+              overflow: 'auto',
               transition: 'max-height 0.3s ease',
               marginTop: '8px',
             }}
           >
-            <p style={{ color: '#8F9AA2', textAlign: 'start', lineHeight: 2 }}>{currentExercise.description}</p>
+            <p
+              style={{ color: '#8F9AA2', textAlign: 'start', lineHeight: 1.2, visibility: open ? 'visible' : 'hidden' }}
+            >
+              {currentExercise.description}
+            </p>
           </div>
         </div>
 
