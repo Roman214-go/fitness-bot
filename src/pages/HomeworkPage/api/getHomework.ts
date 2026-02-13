@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '../../../common/store/store';
+import { process } from '../../../common/constants/process';
 
 export const getHomework = createApi({
   reducerPath: 'homeworkApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:8000/api/v1',
+    baseUrl: process.env.REACT_APP_BASE_URL,
     prepareHeaders: (headers, { getState }) => {
       const state = getState() as RootState;
       const telegramId = state.auth.userData?.telegram_id;

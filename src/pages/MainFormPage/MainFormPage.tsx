@@ -387,6 +387,7 @@ export const MainFormPage = () => {
                           id={`photo-${item.key}`}
                           accept='image/*'
                           style={{ display: 'none' }}
+                          capture='environment'
                           onChange={e =>
                             handlePhotoUpload(
                               item.key as keyof MainFormValues['photos'],

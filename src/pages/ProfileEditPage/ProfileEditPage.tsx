@@ -61,6 +61,7 @@ const ProfileEditPage: React.FC = () => {
           'X-Telegram-Auth': JSON.stringify({
             telegram_id: userData?.telegram_id,
           }),
+          'Content-Type': 'multipart/form-data',
         },
       });
 
@@ -85,7 +86,14 @@ const ProfileEditPage: React.FC = () => {
           <MdAddAPhoto />
         </button>
 
-        <input ref={fileInputRef} type='file' accept='image/*' hidden onChange={handlePhotoChange} />
+        <input
+          ref={fileInputRef}
+          capture='environment'
+          type='file'
+          accept='image/*'
+          style={{ display: 'none' }}
+          onChange={handlePhotoChange}
+        />
         {userData?.photo_url ? (
           <img
             src={

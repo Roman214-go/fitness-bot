@@ -33,6 +33,7 @@ export const postPhysicalData = async (payload: MainFormValues, telegramId: numb
   await axiosInstance.post('forms/physical-data', formData, {
     headers: {
       'X-Telegram-Auth': JSON.stringify({ telegram_id: telegramId }),
+      'Content-Type': 'multipart/form-data',
     },
   });
 };
