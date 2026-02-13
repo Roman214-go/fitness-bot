@@ -237,6 +237,7 @@ export const WorkoutPage: React.FC = () => {
           </p>
           <div className={styles.weightInput}>
             <input
+              className={styles.input}
               type='number'
               min={0}
               step={0.5}
