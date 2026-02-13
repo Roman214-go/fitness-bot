@@ -152,21 +152,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
 
               <div className={styles.section}>
                 <h3>Данные карты</h3>
-                <Field name='cardNumber' placeholder='Номер карты' />
+                <Field name='cardNumber' type='number' placeholder='Номер карты' />
                 <ErrorMessage name='cardNumber' component='div' className={styles.error} />
 
                 <div className={styles.row}>
-                  <Field name='expMonth' placeholder='MM' />
-                  <ErrorMessage name='expMonth' component='div' className={styles.error} />
+                  <Field name='expMonth' type='number' placeholder='MM' autoComplete='off' />
 
-                  <Field name='expYear' placeholder='YY' />
-                  <ErrorMessage name='expYear' component='div' className={styles.error} />
+                  <Field name='expYear' type='number' placeholder='YY' autoComplete='off' />
 
-                  <Field name='cvc' placeholder='CVC' />
-                  <ErrorMessage name='cvc' component='div' className={styles.error} />
+                  <Field name='cvc' type='number' placeholder='CVC' autoComplete='off' />
                 </div>
+                <ErrorMessage name='expMonth' component='div' className={styles.error} />
+                <ErrorMessage name='expYear' component='div' className={styles.error} />
+                <ErrorMessage name='cvc' component='div' className={styles.error} />
 
-                <Field name='cardHolder' placeholder='Имя держателя карты' />
+                <Field name='cardHolder' autoComplete='off' placeholder='Имя держателя карты' />
                 <ErrorMessage name='cardHolder' component='div' className={styles.error} />
               </div>
 
