@@ -12,6 +12,7 @@ import matImg from '../../assets/equipment/matImg.jpg';
 import bandImg from '../../assets/equipment/bandImg.jpg';
 import trxImg from '../../assets/equipment/trxImg.jpg';
 import Button from '../../common/components/Button';
+import { checkSubscriptionStatus } from '../../common/utils/checkSubscription';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -90,7 +91,9 @@ const HomePage = () => {
             </div>
           </>
         ) : null}
-        {!userData?.has_workout_plan && userData?.subscription && userData.fitness_goals.workout_format === 'home' ? (
+        {!userData?.has_workout_plan &&
+        checkSubscriptionStatus(userData?.subscription) &&
+        userData?.fitness_goals.workout_format === 'home' ? (
           <Button buttonType='secondary' onClick={() => setIsEquipmentOpen(true)}>
             Необходимый инвентарь для тренировок
           </Button>

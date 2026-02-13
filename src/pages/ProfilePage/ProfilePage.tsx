@@ -15,6 +15,7 @@ import { coachSpeech } from '../../common/constants/coachSpeech';
 import { fetchAchievements, fetchMyAchievements, fetchMyMainAchievement } from './api/achievementsSlice';
 import { process } from '../../common/constants/process';
 import { PrivacyModal } from '../PrivacyModal/PrivacyModal';
+import { checkSubscriptionStatus } from '../../common/utils/checkSubscription';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export const ProfilePage: React.FC = () => {
   }));
 
   useEffect(() => {
-    if (telegramId && userData.subscription) {
+    if (telegramId && checkSubscriptionStatus(userData?.subscription)) {
       dispatch(fetchAchievements({ telegramId, includeInactive: false }));
       dispatch(fetchMyAchievements({ telegramId }));
       dispatch(fetchMyMainAchievement({ telegramId }));
@@ -221,7 +222,7 @@ export const ProfilePage: React.FC = () => {
           <WeightPrediction value={userData.weight_loss_forecast.target_weight_month} />
         ) : null}
 
-        {userData?.subscription ? (
+        {checkSubscriptionStatus(userData?.subscription) ? (
           <>
             <h2 className={styles.achievements_title}>Доступные достижения</h2>
 
