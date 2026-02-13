@@ -53,7 +53,7 @@
 }
 
 .achievementImage {
-  background-color: #1a1a1a;
+  background-color: none;
   width: 25px;
   height: 25px;
 }
@@ -179,7 +179,7 @@
 
 .achievements {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, max-content));
+  grid-template-columns: repeat(auto-fit, minmax(150px, max-content));
   justify-content: center;
   gap: 20px;
   &_title {
