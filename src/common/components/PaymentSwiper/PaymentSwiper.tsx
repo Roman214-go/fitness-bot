@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import styles from './PaymentSwiper.module.scss';
 import Button from '../Button';
 import { Navigation } from 'swiper/modules';
-import { useAppSelector, useAppDispatch } from '../../store/hooks'; // ваши typed hooks
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-expect-error
@@ -44,7 +44,7 @@ export const PaymentSwiper = () => {
 
   const getCurrencyByLocation = (location?: string): 'BYN' | 'RUB' => {
     if (location === 'BY') return 'BYN';
-    return 'RUB'; // ru | any | undefined
+    return 'RUB';
   };
 
   const handleBuyPlan = async (plan: SubscriptionPlan, currency: 'BYN' | 'RUB') => {
@@ -110,27 +110,38 @@ export const PaymentSwiper = () => {
           return (
             <SwiperSlide key={plan.subscription_type}>
               <div className={styles.swiper_container}>
-                <div>
-                  <h2 className={styles.title}>{plan.name}</h2>
-                  <p style={{ textAlign: 'start' }}>{plan.duration_days} дней</p>
+                <div className={styles.badge}>{plan.name}</div>
+
+                <div className={styles.priceBlock}>
+                  {plan.discount_percent > 0 ? (
+                    <p className={styles.discount_price}>{price.formatted_base_price}</p>
+                  ) : null}
+
+                  <p className={styles.price}>
+                    {price.final_price} {currency === 'BYN' ? 'BYN' : 'РУБ'}
+                  </p>
                 </div>
 
-                <p style={{ textAlign: 'start' }}> {plan.description}</p>
+                <ul className={styles.features}>
+                  {plan.description.split('#').map((item, index) => {
+                    const trimmed = item.trim();
+                    if (!trimmed) return null;
+                    return (
+                      <li key={index}>
+                        <span className={styles.checkmark}>✓</span>
+                        {trimmed}
+                      </li>
+                    );
+                  })}
+                </ul>
 
-                <div>
-                  {/* Старая цена */}
-                  {price.savings > 0 && <p className={styles.discount_price}>{price.formatted_base_price}</p>}
-
-                  {/* Итоговая цена */}
-                  <p className={styles.price}>{price.formatted_final_price}</p>
-
-                  {/* Скидка */}
-                  {plan.discount_percent > 0 && (
+                {plan.discount_percent > 0 && (
+                  <div className={styles.discountInfo}>
                     <p className={styles.discount}>
                       Скидка − {plan.discount_percent}% (экономия {price.formatted_savings})
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 <Button disabled={paymentLoading} onClick={() => handleBuyPlan(plan, currency)}>
                   {price.final_price === 0 ? 'Активировать' : paymentLoading ? 'Загрузка...' : 'Купить'}

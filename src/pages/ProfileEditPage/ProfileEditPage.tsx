@@ -32,12 +32,64 @@ const validationSchema = Yup.object({
     .max(250, 'Максимум 250 кг'),
 });
 
+// Функция для корректировки ориентации изображения
+const fixImageOrientation = (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
+
+        // Устанавливаем размеры canvas
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        // Рисуем изображение
+        ctx.drawImage(img, 0, 0);
+
+        // Конвертируем canvas в blob
+        canvas.toBlob(
+          blob => {
+            if (blob) {
+              const newFile = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(newFile);
+            } else {
+              reject(new Error('Canvas to Blob conversion failed'));
+            }
+          },
+          'image/jpeg',
+          0.9,
+        );
+      };
+
+      img.onerror = () => reject(new Error('Image loading failed'));
+      img.src = e.target?.result as string;
+    };
+
+    reader.onerror = () => reject(new Error('FileReader error'));
+    reader.readAsDataURL(file);
+  });
+};
+
 const ProfileEditPage: React.FC = () => {
   const navigate = useNavigate();
   const { userData } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
 
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const goalOptions = [
@@ -50,55 +102,102 @@ const ProfileEditPage: React.FC = () => {
     let file = e.target.files?.[0];
     if (!file || !userData?.telegram_id) return;
 
-    try {
-      if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
-        const convertedBlob = await heic2any({
-          blob: file,
-          toType: 'image/jpeg',
-          quality: 0.9,
-        });
+    setIsUploading(true);
 
-        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-        file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+    try {
+      // Обработка HEIC формата
+      if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+        try {
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.9,
+          });
+
+          const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          file = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+        } catch (heicError) {
+          console.warn('HEIC conversion failed, trying standard processing:', heicError);
+        }
       }
 
-      const previewUrl = URL.createObjectURL(file);
+      // Исправление ориентации для всех изображений
+      const processedFile = await fixImageOrientation(file);
 
+      // Создаем preview URL для отображения
+      const previewUrl = URL.createObjectURL(processedFile);
+
+      // Очищаем старый preview
       if (photoUrl && photoUrl.startsWith('blob:')) {
         URL.revokeObjectURL(photoUrl);
       }
 
+      // Показываем preview
       setPhotoUrl(previewUrl);
 
+      // Отправляем на сервер
       const formData = new FormData();
-      formData.append('photo', file);
+      formData.append('photo', processedFile);
 
       await axiosInstance.put('profile/me/photo', formData, {
         headers: {
           'X-Telegram-Auth': JSON.stringify({
             telegram_id: userData.telegram_id,
           }),
+          'Content-Type': 'multipart/form-data',
         },
       });
 
+      // Получаем обновленные данные пользователя
       const res = await axiosInstance.get(`/users/telegram/${userData.telegram_id}`, {
         params: { include_relations: true },
       });
 
       dispatch(setUserData(res.data));
 
+      // Очищаем preview blob и устанавливаем URL с сервера
       URL.revokeObjectURL(previewUrl);
-      setPhotoUrl(`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${res.data.photo_url}`);
+
+      // Добавляем timestamp чтобы избежать кеширования
+      const serverPhotoUrl = `${process.env.REACT_APP_BASE_EMPTY_URL}/static/${res.data.photo_url}?t=${Date.now()}`;
+      setPhotoUrl(serverPhotoUrl);
     } catch (err) {
       console.error('Ошибка загрузки фото:', err);
+
+      // Очищаем preview в случае ошибки
       if (photoUrl && photoUrl.startsWith('blob:')) {
         URL.revokeObjectURL(photoUrl);
       }
-      setPhotoUrl(null);
+
+      // Возвращаемся к старому фото
+      if (userData?.photo_url) {
+        setPhotoUrl(`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${userData.photo_url}`);
+      } else {
+        setPhotoUrl(null);
+      }
+
+      alert('Не удалось загрузить фото. Попробуйте еще раз.');
+    } finally {
+      setIsUploading(false);
+      // Сбрасываем input для возможности загрузить то же фото снова
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
   useEffect(() => {
+    // Устанавливаем начальное фото
+    if (userData?.photo_url && !photoUrl) {
+      setPhotoUrl(`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${userData.photo_url}`);
+    }
+  }, [userData?.photo_url]);
+
+  useEffect(() => {
+    // Cleanup function для очистки blob URLs
     return () => {
       if (photoUrl && photoUrl.startsWith('blob:')) {
         URL.revokeObjectURL(photoUrl);
@@ -112,26 +211,24 @@ const ProfileEditPage: React.FC = () => {
         <button className={styles.backButton} onClick={() => navigate(-1)}>
           <MdArrowBackIos />
         </button>
-        <button className={styles.uploadAvatar} onClick={() => fileInputRef.current?.click()}>
-          <MdAddAPhoto />
+        <button className={styles.uploadAvatar} onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+          {isUploading ? '...' : <MdAddAPhoto />}
         </button>
 
         <input
           ref={fileInputRef}
           type='file'
-          accept='image/*'
+          accept='image/*,image/heic,image/heif'
           style={{ display: 'none' }}
           onChange={handlePhotoChange}
         />
-        {userData?.photo_url ? (
+        {(photoUrl || userData?.photo_url) && (
           <img
-            src={
-              photoUrl ||
-              `${process.env.REACT_APP_BASE_EMPTY_URL}/static/${userData?.photo_url}` ||
-              'https://i.pravatar.cc/150?img=8'
-            }
+            src={photoUrl || `${process.env.REACT_APP_BASE_EMPTY_URL}/static/${userData?.photo_url}`}
+            alt='Profile'
+            style={{ opacity: isUploading ? 0.5 : 1 }}
           />
-        ) : null}
+        )}
       </div>
 
       <Formik
