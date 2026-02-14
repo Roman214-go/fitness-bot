@@ -14,6 +14,9 @@ import back from '../../assets/bodyPhotos/back.jpg';
 import incline from '../../assets/bodyPhotos/incline.jpg';
 import side from '../../assets/bodyPhotos/side.jpg';
 import heic2any from 'heic2any';
+import { Tooltip } from 'react-tooltip';
+
+import 'react-tooltip/dist/react-tooltip.css';
 
 export type Gender = 'M' | 'F';
 
@@ -191,12 +194,12 @@ export const MainFormPage = () => {
     label: string;
     code: React.ReactNode;
   }[] = [
-    { key: 'front_photo', label: 'спереди', code: <img className={styles.photoPreview} src={front} /> },
-    { key: 'back_photo', label: 'сзади', code: <img className={styles.photoPreview} src={back} /> },
-    { key: 'left_front_photo', label: 'левый бок', code: <img className={styles.photoPreview} src={side} /> },
+    { key: 'front_photo', label: '', code: <img className={styles.photoPreview} src={front} /> },
+    { key: 'back_photo', label: '', code: <img className={styles.photoPreview} src={back} /> },
+    { key: 'left_front_photo', label: '', code: <img className={styles.photoPreview} src={side} /> },
     {
       key: 'left_incline_photo',
-      label: 'левый бок в наклоне',
+      label: '',
       code: <img className={styles.photoPreview} src={incline} />,
     },
   ];
@@ -368,7 +371,7 @@ export const MainFormPage = () => {
             <div className={`${styles.formSection} ${errors.height && touched.height ? styles.hasError : ''}`}>
               <label className={styles.formLabel}>Рост (см)</label>
               <Field
-                type='text'
+                type='number'
                 name='height'
                 placeholder='180'
                 className={`${styles.inputField} ${errors.height && touched.height ? styles.hasError : ''}`}
@@ -380,7 +383,7 @@ export const MainFormPage = () => {
             <div className={`${styles.formSection} ${errors.weight && touched.weight ? styles.hasError : ''}`}>
               <label className={styles.formLabel}>Масса тела (кг)</label>
               <Field
-                type='text'
+                type='number'
                 name='weight'
                 placeholder='70'
                 className={`${styles.inputField} ${errors.weight && touched.weight ? styles.hasError : ''}`}
@@ -392,7 +395,7 @@ export const MainFormPage = () => {
             <div className={`${styles.formSection} ${errors.age && touched.age ? styles.hasError : ''}`}>
               <label className={styles.formLabel}>Возраст (лет)</label>
               <Field
-                type='text'
+                type='number'
                 name='age'
                 placeholder='25'
                 className={`${styles.inputField} ${errors.age && touched.age ? styles.hasError : ''}`}
@@ -499,6 +502,7 @@ export const MainFormPage = () => {
               className={`${styles.formSection} ${errors.daily_steps_level && touched.daily_steps_level ? styles.hasError : ''}`}
             >
               <label className={styles.formLabel}>Двигательная активность</label>
+
               <div className={styles.radioGroup}>
                 <label className={styles.radioLabel}>
                   <Field type='radio' name='daily_steps_level' value='SEDENTARY' />
@@ -524,7 +528,25 @@ export const MainFormPage = () => {
             <div
               className={`${styles.formSection} ${errors.daily_steps_level && touched.photos ? styles.hasError : ''}`}
             >
-              <label className={styles.formLabel}>Вставить фото</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <label className={styles.formLabel}>Вставить фото </label>
+                <span
+                  className={styles.tooltipIcon}
+                  data-tooltip-content='Фото необходимо тренеру для определения типа осанки и индивидуализации программы тренеровок'
+                  data-tooltip-id='activity-tooltip'
+                >
+                  ?
+                </span>
+              </div>
+              <Tooltip
+                id='activity-tooltip'
+                className={styles.tooltip}
+                place='top'
+                float={true}
+                offset={8}
+                positionStrategy='fixed'
+              />
+
               <div className={styles.photoGrid}>
                 {photosConfig.map(item => {
                   const photoKey = item.key as keyof MainFormValues['photos'];
@@ -548,7 +570,6 @@ export const MainFormPage = () => {
                           )}
                         </label>
                       </div>
-                      <span className={styles.photoLabelText}>{item.label}</span>
                       {errors.photos?.[item.key] && touched.photos?.[photoKey] && (
                         <div className={styles.error}>{errors.photos[item.key]}</div>
                       )}

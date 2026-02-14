@@ -20,10 +20,10 @@
   justify-content: space-between;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.08);
   padding: 24px 20px;
   margin: 15px;
-  background-color: #3c3c3c;
+  background-color: #ffffff08;
   border-radius: 12px;
   border: 1px solid #e8e8e8;
 }
@@ -34,10 +34,10 @@
   left: 50%;
   transform: translateX(-50%);
   background-color: #e2f163;
-  color: #ffffff;
+  color: white;
   padding: 6px 16px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 21px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -64,7 +64,7 @@
 .price {
   font-size: 42px;
   font-weight: 700;
-  color: #e74c3c;
+  color: #4caf50;
   line-height: 1;
   margin: 0;
 }
@@ -112,7 +112,6 @@
 }
 
 .discount_price {
-  color: red;
   color: #999;
   font-size: 14px;
   text-align: center;

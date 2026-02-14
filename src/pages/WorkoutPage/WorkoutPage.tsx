@@ -204,8 +204,7 @@ export const WorkoutPage: React.FC = () => {
           <div
             className={styles.exerciseName}
             style={{
-              maxHeight: open ? '1200px' : '100px',
-              overflowY: 'auto',
+              maxHeight: open ? '1200px' : '120px',
             }}
           >
             <p>{currentExercise.name}</p>
@@ -239,7 +238,9 @@ export const WorkoutPage: React.FC = () => {
         </div>
 
         <div>
-          <p style={{ color: '#8F9AA2', marginBottom: '10px', fontSize: '14px', textAlign: 'start' }}>
+          <p
+            style={{ color: '#8F9AA2', marginBottom: '10px', marginLeft: '10px', fontSize: '14px', textAlign: 'start' }}
+          >
             При использовании веса в упражнении, введите его ниже в кг
           </p>
           <div className={styles.weightInput}>

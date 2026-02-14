@@ -8,6 +8,7 @@ interface Props {
 export const OnboardingSlide = ({ data }: Props) => {
   return (
     <div className={styles.slide}>
+      <div>{data.icon}</div>
       <h2 className={styles.slide_title}>{data.title}</h2>
       <p className={styles.slide_text}>{data.text}</p>
     </div>

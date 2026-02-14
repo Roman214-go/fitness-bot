@@ -48,7 +48,7 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
         const telegramUser = tg?.initDataUnsafe?.user;
 
         const authResponse = await verifyAuth({
-          telegram_id: telegramUser?.id,
+          telegram_id: telegramUser?.id ?? 13,
           username: telegramUser?.username ?? 'User',
           first_name: telegramUser?.first_name ?? 'Name',
           last_name: telegramUser?.last_name ?? 'Surname',

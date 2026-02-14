@@ -132,8 +132,7 @@ export const HomeworkPage: React.FC = () => {
           <div
             className={styles.exerciseName}
             style={{
-              maxHeight: open ? '1200px' : '100px',
-              overflowY: 'auto',
+              maxHeight: open ? '1200px' : '120px',
             }}
           >
             <p>{currentExercise.name}</p>
@@ -178,7 +177,16 @@ export const HomeworkPage: React.FC = () => {
             />
           </svg>
           <div className={styles.progressContent}>
-            <p style={{ fontSize: '14px', position: 'absolute', top: '-15px', color: '#666', lineHeight: 0.7 }}>
+            <p
+              style={{
+                fontSize: '14px',
+                position: 'absolute',
+                marginLeft: '10px',
+                top: '-15px',
+                color: '#666',
+                lineHeight: 0.7,
+              }}
+            >
               подходы
             </p>
             <div className={styles.setCounter}>

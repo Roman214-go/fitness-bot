@@ -349,3 +349,34 @@ input[type='checkbox'] {
     gap: 8px;
   }
 }
+
+.tooltipIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #e5e7eb; /* светло-серый */
+  color: #374151; /* тёмно-серый */
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.tooltip {
+  background-color: #111827 !important;
+  color: #ffffff !important;
+  font-size: 12px;
+  padding: 8px 10px !important;
+  border-radius: 6px !important;
+  z-index: 1000;
+  max-width: min(240px, 90vw); /* ⬅ ограничение для мобильных */
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.4;
+}
