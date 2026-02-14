@@ -188,43 +188,50 @@ export const MainFormPage = () => {
     let file = event.target.files?.[0];
     if (!file) return;
 
-    // 🔹 HEIC → JPEG (iPhone)
-    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
-      try {
-        const convertedBlob = (await heic2any({
+    try {
+      // 🔹 HEIC → JPEG (iPhone)
+      if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+        const convertedBlob = await heic2any({
           blob: file,
           toType: 'image/jpeg',
           quality: 0.9,
-        })) as Blob;
+        });
 
-        file = new File([convertedBlob], 'photo.jpg', {
+        // heic2any может вернуть массив или один blob
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        file = new File([blob], 'photo.jpg', {
           type: 'image/jpeg',
         });
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        setFieldError(`photos.${photoType}`, 'Не удалось обработать фото');
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        setFieldError(`photos.${photoType}`, 'Размер файла не более 10MB');
         return;
       }
+
+      if (!file.type.startsWith('image/')) {
+        setFieldError(`photos.${photoType}`, 'Можно загружать только изображения');
+        return;
+      }
+
+      // Освобождаем старый preview если он есть
+      const oldPreview = photoPreviews[photoType];
+      if (oldPreview && oldPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(oldPreview);
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+
+      setPhotoPreviews(prev => ({
+        ...prev,
+        [photoType]: previewUrl,
+      }));
+
+      setFieldValue(`photos.${photoType}`, file);
+    } catch (e) {
+      console.error('Ошибка обработки фото:', e);
+      setFieldError(`photos.${photoType}`, 'Не удалось обработать фото');
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setFieldError(`photos.${photoType}`, 'Размер файла не более 10MB');
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      setFieldError(`photos.${photoType}`, 'Можно загружать только изображения');
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-
-    setPhotoPreviews(prev => ({
-      ...prev,
-      [photoType]: previewUrl,
-    }));
-
-    setFieldValue(`photos.${photoType}`, file);
   };
 
   const getPhotoPreview = (photoKey: PhotoKey): string | null => {

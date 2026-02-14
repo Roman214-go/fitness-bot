@@ -50,20 +50,26 @@ const ProfileEditPage: React.FC = () => {
     let file = e.target.files?.[0];
     if (!file || !userData?.telegram_id) return;
 
-    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
-      const convertedBlob = (await heic2any({
-        blob: file,
-        toType: 'image/jpeg',
-        quality: 0.9,
-      })) as Blob;
-
-      file = new File([convertedBlob], 'photo.jpg', { type: 'image/jpeg' });
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-    setPhotoUrl(previewUrl);
-
     try {
+      if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.9,
+        });
+
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+
+      if (photoUrl && photoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(photoUrl);
+      }
+
+      setPhotoUrl(previewUrl);
+
       const formData = new FormData();
       formData.append('photo', file);
 
@@ -81,9 +87,13 @@ const ProfileEditPage: React.FC = () => {
 
       dispatch(setUserData(res.data));
 
+      URL.revokeObjectURL(previewUrl);
       setPhotoUrl(`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${res.data.photo_url}`);
     } catch (err) {
       console.error('Ошибка загрузки фото:', err);
+      if (photoUrl && photoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(photoUrl);
+      }
       setPhotoUrl(null);
     }
   };
