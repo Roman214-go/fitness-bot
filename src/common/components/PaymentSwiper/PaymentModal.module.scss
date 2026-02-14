@@ -60,3 +60,16 @@
   gap: 8px;
   margin-top: 16px;
 }
+
+.input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.error {
+  border-color: red;
+  background-color: #ffe6e6;
+}

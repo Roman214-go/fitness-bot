@@ -237,7 +237,7 @@ export const CalendarPage: React.FC = () => {
         ))}
       </div>
       <div style={{ margin: '10px 0' }}>
-        <HiddenText text='Для перехода на тренировку, нажмите на день с запланированной или рекомендуемой тренировкой' />
+        <HiddenText text='Чтобы начать тренировку, выберите в календаре сегодняшнюю тренировку либо рекомендуемую' />
       </div>
       <div className='legend'>
         <div className='legend-item'>

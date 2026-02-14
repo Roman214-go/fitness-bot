@@ -48,6 +48,13 @@ export const HomeworkPage: React.FC = () => {
   const totalExercises = currentHomework.personal_exercises.length;
   const isLastExercise = currentExerciseIndex === totalExercises - 1;
   const isLastHomework = currentHomeworkIndex === homeworkData.length - 1 && isLastExercise;
+  const allExercises = homeworkData.flatMap(homework => homework.personal_exercises);
+
+  const totalExercisesGlobal = allExercises.length;
+  const currentExerciseGlobalIndex =
+    homeworkData.slice(0, currentHomeworkIndex).reduce((acc, hw) => acc + hw.personal_exercises.length, 0) +
+    currentExerciseIndex +
+    1;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -96,7 +103,7 @@ export const HomeworkPage: React.FC = () => {
     }
   };
 
-  const progress = (currentExerciseIndex / totalExercises) * 100;
+  const progress = (currentExerciseGlobalIndex / totalExercisesGlobal) * 100;
   const strokeDasharray = 2 * Math.PI * 63.75;
   const strokeDashoffset = strokeDasharray - (progress / 100) * strokeDasharray;
 
@@ -175,7 +182,7 @@ export const HomeworkPage: React.FC = () => {
               подходы
             </p>
             <div className={styles.setCounter}>
-              {currentExerciseIndex}/{totalExercises}
+              {currentExerciseGlobalIndex}/{totalExercisesGlobal}
             </div>
           </div>
         </div>

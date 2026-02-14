@@ -54,12 +54,18 @@ export const WorkoutPage: React.FC = () => {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number>(0);
   const [weight, setWeight] = useState<string>('');
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  const allExercises = workout.personal_sets.flatMap(set => set.personal_exercises);
 
+  const totalExercises = allExercises.length;
   const currentSet = workout.personal_sets[currentSetIndex];
   const currentExercise = currentSet.personal_exercises[currentExerciseIndex];
+  const currentExerciseGlobalIndex =
+    workout.personal_sets.slice(0, currentSetIndex).reduce((acc, set) => acc + set.personal_exercises.length, 0) +
+    currentExerciseIndex +
+    1;
 
   const totalExercisesInSet = currentSet.personal_exercises.length;
-  const progress = (currentExerciseIndex / totalExercisesInSet) * 100;
+  const progress = (currentExerciseGlobalIndex / totalExercises) * 100;
 
   const isLastExerciseInSet = currentExerciseIndex === totalExercisesInSet - 1;
   const isLastSet = currentSetIndex === workout.personal_sets.length - 1 && isLastExerciseInSet;
@@ -265,7 +271,7 @@ export const WorkoutPage: React.FC = () => {
               подходы
             </p>
             <div className={styles.setCounter}>
-              {currentExerciseIndex}/{totalExercisesInSet}
+              {currentExerciseGlobalIndex}/{totalExercises}
             </div>
           </div>
         </div>

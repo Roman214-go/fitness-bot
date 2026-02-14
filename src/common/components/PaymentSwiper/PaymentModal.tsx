@@ -4,7 +4,7 @@ import { CreatePaymentRequest } from './api/paymentApi';
 import { toast, ToastContainer } from 'react-toastify';
 import Button from '../Button';
 import styles from './PaymentModal.module.scss';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form, Field, FieldProps } from 'formik';
 import * as Yup from 'yup';
 import { SubscriptionPlan } from './api/subscriptionApi';
 import { createPayment } from './api/paymentSlice';
@@ -21,20 +21,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
   const { userData } = useAppSelector(state => state.auth);
 
   const initialValues = {
-    email: userData?.username || '',
+    email: '',
     cardNumber: '',
     expMonth: '',
     expYear: '',
     cvc: '',
-    card_number: '',
-    cardHolder: `${userData?.first_name || ''} ${userData?.last_name || ''}`,
-    firstName: userData?.first_name || '',
-    lastName: userData?.last_name || '',
-    country: '',
-    city: '',
-    address: '',
-    zipCode: '',
-    phone: '',
+    cardHolder: '',
   };
 
   const validationSchema = Yup.object({
@@ -52,13 +44,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
       .matches(/^\d{3,4}$/, 'Неверный CVC')
       .required('Обязательное поле'),
     cardHolder: Yup.string().required('Обязательное поле'),
-    firstName: Yup.string().required('Обязательное поле'),
-    lastName: Yup.string().required('Обязательное поле'),
-    country: Yup.string().required('Обязательное поле'),
-    city: Yup.string().required('Обязательное поле'),
-    address: Yup.string().required('Обязательное поле'),
-    zipCode: Yup.string().required('Обязательное поле'),
-    phone: Yup.string().required('Обязательное поле'),
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,20 +54,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
       subscription_type: String(plan.subscription_type),
       currency,
       user_email: values.email,
-
-      billing_info: {
-        first_name: values.firstName,
-        last_name: values.lastName,
-        phone: values.phone,
-        country: values.country,
-        city: values.city,
-        address: values.address,
-        zip_code: values.zipCode,
-      },
-
       return_url: process.env.APP_URL,
       language: 'ru',
-
       credit_card: {
         number: values.cardNumber,
         verification_value: values.cvc,
@@ -90,7 +63,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
         exp_month: values.expMonth,
         exp_year: values.expYear,
       },
-
       card_holder: values.cardHolder,
     };
 
@@ -121,62 +93,84 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
         <h2>Оплата подписки: {plan.name}</h2>
 
         <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-          {({ isSubmitting }) => (
+          {() => (
             <Form>
               <div className={styles.section}>
                 <h3>Информация для счёта</h3>
-                <Field name='email' placeholder='Email' />
-                <ErrorMessage name='email' component='div' className={styles.error} />
-
-                <Field name='firstName' placeholder='Имя' />
-                <ErrorMessage name='firstName' component='div' className={styles.error} />
-
-                <Field name='lastName' placeholder='Фамилия' />
-                <ErrorMessage name='lastName' component='div' className={styles.error} />
-
-                <Field name='country' placeholder='Страна' />
-                <ErrorMessage name='country' component='div' className={styles.error} />
-
-                <Field name='city' placeholder='Город' />
-                <ErrorMessage name='city' component='div' className={styles.error} />
-
-                <Field name='address' placeholder='Адрес' />
-                <ErrorMessage name='address' component='div' className={styles.error} />
-
-                <Field name='zipCode' placeholder='Индекс' />
-                <ErrorMessage name='zipCode' component='div' className={styles.error} />
-
-                <Field name='phone' placeholder='Телефон' />
-                <ErrorMessage name='phone' component='div' className={styles.error} />
+                <Field name='email'>
+                  {({ field, form }: FieldProps) => (
+                    <input
+                      {...field}
+                      placeholder='Email'
+                      className={`
+        ${styles.input} 
+        ${form.touched.email && form.errors.email ? styles.error : ''}
+      `}
+                    />
+                  )}
+                </Field>{' '}
               </div>
 
               <div className={styles.section}>
                 <h3>Данные карты</h3>
-                <Field name='cardNumber' type='number' placeholder='Номер карты' />
-                <ErrorMessage name='cardNumber' component='div' className={styles.error} />
-
+                <Field name='cardNumber'>
+                  {({ field, form }: FieldProps) => (
+                    <input
+                      {...field}
+                      type='number'
+                      placeholder='Номер карты'
+                      className={`${styles.input} ${form.touched.cardNumber && form.errors.cardNumber ? styles.error : ''}`}
+                    />
+                  )}
+                </Field>
                 <div className={styles.row}>
-                  <Field name='expMonth' type='number' placeholder='MM' autoComplete='off' />
-
-                  <Field name='expYear' type='number' placeholder='YY' autoComplete='off' />
-
-                  <Field name='cvc' type='number' placeholder='CVC' autoComplete='off' />
+                  <Field name='expMonth'>
+                    {({ field, form }: FieldProps) => (
+                      <input
+                        {...field}
+                        type='number'
+                        placeholder='MM'
+                        className={`${styles.input} ${form.touched.expMonth && form.errors.expMonth ? styles.error : ''}`}
+                      />
+                    )}
+                  </Field>
+                  <Field name='expYear'>
+                    {({ field, form }: FieldProps) => (
+                      <input
+                        {...field}
+                        type='number'
+                        placeholder='YY'
+                        className={`${styles.input} ${form.touched.expYear && form.errors.expYear ? styles.error : ''}`}
+                      />
+                    )}
+                  </Field>
+                  <Field name='cvc'>
+                    {({ field, form }: FieldProps) => (
+                      <input
+                        {...field}
+                        type='number'
+                        placeholder='CVC'
+                        className={`${styles.input} ${form.touched.cvc && form.errors.cvc ? styles.error : ''}`}
+                      />
+                    )}
+                  </Field>{' '}
                 </div>
-                <ErrorMessage name='expMonth' component='div' className={styles.error} />
-                <ErrorMessage name='expYear' component='div' className={styles.error} />
-                <ErrorMessage name='cvc' component='div' className={styles.error} />
-
-                <Field name='cardHolder' autoComplete='off' placeholder='Имя держателя карты' />
-                <ErrorMessage name='cardHolder' component='div' className={styles.error} />
+                <Field name='cardHolder'>
+                  {({ field, form }: FieldProps) => (
+                    <input
+                      {...field}
+                      placeholder='Имя держателя карты'
+                      className={`${styles.input} ${form.touched.cardHolder && form.errors.cardHolder ? styles.error : ''}`}
+                    />
+                  )}
+                </Field>{' '}
               </div>
 
               <div className={styles.actions}>
-                <Button type='button' onClick={onClose} disabled={isSubmitting}>
+                <Button type='button' onClick={onClose}>
                   Отмена
                 </Button>
-                <Button type='submit' disabled={isSubmitting}>
-                  {isSubmitting ? 'Загрузка...' : 'Оплатить'}
-                </Button>
+                <Button type='submit'>Оплатить</Button>
               </div>
             </Form>
           )}
