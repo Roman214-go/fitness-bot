@@ -10,6 +10,7 @@ import { setUserData } from '../../common/auth/authSlice';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { process } from '../../common/constants/process';
+import heic2any from 'heic2any';
 
 const validationSchema = Yup.object({
   age: Yup.number()
@@ -46,37 +47,43 @@ const ProfileEditPage: React.FC = () => {
   ];
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    let file = e.target.files?.[0];
+    if (!file || !userData?.telegram_id) return;
+
+    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+      const convertedBlob = (await heic2any({
+        blob: file,
+        toType: 'image/jpeg',
+        quality: 0.9,
+      })) as Blob;
+
+      file = new File([convertedBlob], 'photo.jpg', { type: 'image/jpeg' });
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setPhotoUrl(previewUrl);
 
     try {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
       const formData = new FormData();
       formData.append('photo', file);
 
       await axiosInstance.put('profile/me/photo', formData, {
         headers: {
           'X-Telegram-Auth': JSON.stringify({
-            telegram_id: userData?.telegram_id,
+            telegram_id: userData.telegram_id,
           }),
-          'Content-Type': 'multipart/form-data',
         },
       });
 
-      const res = await axiosInstance.get(`/users/telegram/${userData?.telegram_id}`, {
+      const res = await axiosInstance.get(`/users/telegram/${userData.telegram_id}`, {
         params: { include_relations: true },
       });
 
       dispatch(setUserData(res.data));
 
       setPhotoUrl(`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${res.data.photo_url}`);
-    } catch (e) {
-      console.error('Ошибка загрузки фото:', e);
+    } catch (err) {
+      console.error('Ошибка загрузки фото:', err);
       setPhotoUrl(null);
     }
   };

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useVerifyAuthMutation } from './authApi';
 import { useAppDispatch } from '../store/hooks';
 import { setAuthData, setUserData } from './authSlice';
@@ -10,8 +10,11 @@ import { ErrorScreen } from '../../pages/ErrorScreen/ErrorScreen';
 export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuthLoaded }) => {
   const [verifyAuth] = useVerifyAuthMutation();
   const dispatch = useAppDispatch();
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const initializedRef = useRef(false);
 
   const fetchTelegramPhotoAsFile = async (photoUrl: string): Promise<File> => {
     const response = await fetch(photoUrl);
@@ -30,18 +33,20 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
 
     await axiosInstance.put('/profile/me/photo', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
         'X-Telegram-Auth': JSON.stringify({ telegram_id: telegramId }),
       },
     });
   };
 
   useEffect(() => {
-    const initAuth = async () => {
-      const tg = window.Telegram?.WebApp;
-      const telegramUser = tg?.initDataUnsafe?.user;
+    if (initializedRef.current) return;
+    initializedRef.current = true;
 
+    const initAuth = async () => {
       try {
+        const tg = window.Telegram?.WebApp;
+        const telegramUser = tg?.initDataUnsafe?.user;
+
         const authResponse = await verifyAuth({
           telegram_id: telegramUser?.id,
           username: telegramUser?.username ?? 'User',
@@ -52,29 +57,34 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
 
         dispatch(setAuthData(authResponse));
 
-        const res = await axiosInstance.get(`/users/telegram/${authResponse.user.telegram_id}`, {
+        const userRes = await axiosInstance.get(`/users/telegram/${authResponse.user.telegram_id}`, {
           params: { include_relations: true },
         });
 
-        dispatch(setUserData(res.data));
+        let userData = userRes.data;
 
-        if (telegramUser?.photo_url && !res.data.photo_url) {
+        if (telegramUser?.photo_url && !userData.photo_url) {
           await uploadTelegramPhoto(telegramUser.id, telegramUser.photo_url);
+
+          const updatedUserRes = await axiosInstance.get(`/users/telegram/${authResponse.user.telegram_id}`, {
+            params: { include_relations: true },
+          });
+
+          userData = updatedUserRes.data;
         }
+
+        dispatch(setUserData(userData));
 
         setLoading(false);
         onAuthLoaded();
       } catch (err: any) {
-        if (!err?.status) {
-          setError('Сервер недоступен');
-        } else {
-          setError('Ошибка авторизации');
-        }
+        setLoading(false);
+        setError(!err?.status ? 'Сервер недоступен' : 'Ошибка авторизации');
       }
     };
 
     initAuth();
-  }, [verifyAuth, dispatch, onAuthLoaded]);
+  }, [verifyAuth, dispatch]);
 
   if (error) {
     return <ErrorScreen message={error} />;

@@ -13,6 +13,7 @@ import front from '../../assets/bodyPhotos/front.jpg';
 import back from '../../assets/bodyPhotos/back.jpg';
 import incline from '../../assets/bodyPhotos/incline.jpg';
 import side from '../../assets/bodyPhotos/side.jpg';
+import heic2any from 'heic2any';
 
 export type Gender = 'M' | 'F';
 
@@ -178,18 +179,36 @@ export const MainFormPage = () => {
     navigate('/anamnesis-form');
   };
 
-  const handlePhotoUpload = (
+  const handlePhotoUpload = async (
     photoType: keyof MainFormValues['photos'],
     event: React.ChangeEvent<HTMLInputElement>,
     setFieldValue: (field: string, value: unknown) => void,
     setFieldError: (field: string, message: string) => void,
   ) => {
-    const file = event.target.files?.[0];
-
+    let file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setFieldError(`photos.${photoType}`, 'Размер файла не более 5MB');
+    // 🔹 HEIC → JPEG (iPhone)
+    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+      try {
+        const convertedBlob = (await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.9,
+        })) as Blob;
+
+        file = new File([convertedBlob], 'photo.jpg', {
+          type: 'image/jpeg',
+        });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        setFieldError(`photos.${photoType}`, 'Не удалось обработать фото');
+        return;
+      }
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setFieldError(`photos.${photoType}`, 'Размер файла не более 10MB');
       return;
     }
 
@@ -198,14 +217,12 @@ export const MainFormPage = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPhotoPreviews(prev => ({
-        ...prev,
-        [photoType]: reader.result as string,
-      }));
-    };
-    reader.readAsDataURL(file);
+    const previewUrl = URL.createObjectURL(file);
+
+    setPhotoPreviews(prev => ({
+      ...prev,
+      [photoType]: previewUrl,
+    }));
 
     setFieldValue(`photos.${photoType}`, file);
   };
