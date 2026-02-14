@@ -281,7 +281,6 @@ const ProfileEditPage: React.FC = () => {
           ref={fileInputRef}
           type='file'
           accept='image/*,image/heic,image/heif'
-          capture='environment'
           style={{ display: 'none' }}
           onChange={handlePhotoChange}
         />

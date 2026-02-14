@@ -51,13 +51,111 @@ export interface MainFormValues {
   agreePrivacy: boolean;
 }
 
-const FILE_SIZE = 5 * 1024 * 1024;
+const FILE_SIZE = 2 * 1024 * 1024; // Уменьшено до 2MB
 const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/png', 'image/webp'];
 
 const photoValidation = Yup.mixed<File>()
   .required('Фото обязательно')
-  .test('fileSize', 'Размер файла не более 5MB', file => !file || file.size <= FILE_SIZE)
+  .test('fileSize', 'Размер файла не более 2MB', file => !file || file.size <= FILE_SIZE)
   .test('fileFormat', 'Поддерживаются только JPG, PNG, WEBP', file => !file || SUPPORTED_FORMATS.includes(file.type));
+
+// Функция для конвертации и сжатия изображения
+const compressImage = (file: File): Promise<File> => {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          if (!ctx) {
+            resolve(file);
+            return;
+          }
+
+          // Ограничиваем максимальный размер изображения
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+
+          let width = img.width;
+          let height = img.height;
+
+          // Масштабируем если слишком большое
+          if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+            const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+            width = Math.floor(width * ratio);
+            height = Math.floor(height * ratio);
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Рисуем изображение
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Конвертируем canvas в blob
+          canvas.toBlob(
+            blob => {
+              if (blob) {
+                const maxSize = 2 * 1024 * 1024; // 2MB
+
+                if (blob.size > maxSize) {
+                  // Если файл все еще большой, пробуем еще больше сжать
+                  canvas.toBlob(
+                    secondBlob => {
+                      if (secondBlob) {
+                        const newFile = new File([secondBlob], 'photo.jpg', {
+                          type: 'image/jpeg',
+                          lastModified: Date.now(),
+                        });
+                        resolve(newFile);
+                      } else {
+                        resolve(file);
+                      }
+                    },
+                    'image/jpeg',
+                    0.6,
+                  );
+                } else {
+                  const newFile = new File([blob], 'photo.jpg', {
+                    type: 'image/jpeg',
+                    lastModified: Date.now(),
+                  });
+                  resolve(newFile);
+                }
+              } else {
+                resolve(file);
+              }
+            },
+            'image/jpeg',
+            0.75,
+          );
+        } catch (error) {
+          console.warn('Canvas processing failed:', error);
+          resolve(file);
+        }
+      };
+
+      img.onerror = () => {
+        console.warn('Image loading failed');
+        resolve(file);
+      };
+
+      img.src = e.target?.result as string;
+    };
+
+    reader.onerror = () => {
+      console.warn('FileReader failed');
+      resolve(file);
+    };
+
+    reader.readAsDataURL(file);
+  });
+};
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const goalsArray = [
@@ -189,27 +287,34 @@ export const MainFormPage = () => {
     if (!file) return;
 
     try {
-      // 🔹 HEIC → JPEG (iPhone)
+      // Обработка HEIC формата
       if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
-        const convertedBlob = await heic2any({
-          blob: file,
-          toType: 'image/jpeg',
-          quality: 0.9,
-        });
+        try {
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.7,
+          });
 
-        // heic2any может вернуть массив или один blob
-        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-        file = new File([blob], 'photo.jpg', {
-          type: 'image/jpeg',
-        });
+          const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          file = new File([blob], 'photo.jpg', {
+            type: 'image/jpeg',
+          });
+        } catch (heicError) {
+          console.warn('HEIC conversion failed:', heicError);
+        }
       }
 
-      if (file.size > 10 * 1024 * 1024) {
-        setFieldError(`photos.${photoType}`, 'Размер файла не более 10MB');
+      // Сжимаем изображение
+      const compressedFile = await compressImage(file);
+
+      // Проверяем размер после сжатия
+      if (compressedFile.size > 2 * 1024 * 1024) {
+        setFieldError(`photos.${photoType}`, 'Не удалось сжать изображение до нужного размера');
         return;
       }
 
-      if (!file.type.startsWith('image/')) {
+      if (!compressedFile.type.startsWith('image/')) {
         setFieldError(`photos.${photoType}`, 'Можно загружать только изображения');
         return;
       }
@@ -220,14 +325,14 @@ export const MainFormPage = () => {
         URL.revokeObjectURL(oldPreview);
       }
 
-      const previewUrl = URL.createObjectURL(file);
+      const previewUrl = URL.createObjectURL(compressedFile);
 
       setPhotoPreviews(prev => ({
         ...prev,
         [photoType]: previewUrl,
       }));
 
-      setFieldValue(`photos.${photoType}`, file);
+      setFieldValue(`photos.${photoType}`, compressedFile);
     } catch (e) {
       console.error('Ошибка обработки фото:', e);
       setFieldError(`photos.${photoType}`, 'Не удалось обработать фото');
@@ -431,9 +536,8 @@ export const MainFormPage = () => {
                         <input
                           type='file'
                           id={`photo-${item.key}`}
-                          accept='image/*'
+                          accept='image/*,image/heic,image/heif'
                           style={{ display: 'none' }}
-                          capture='environment'
                           onChange={e => handlePhotoUpload(photoKey, e, setFieldValue, setFieldError)}
                         />
                         <label htmlFor={`photo-${item.key}`} className={styles.photoLabel}>
