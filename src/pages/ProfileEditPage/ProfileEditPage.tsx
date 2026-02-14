@@ -34,13 +34,7 @@ const validationSchema = Yup.object({
 
 // Функция для конвертации изображения в JPEG через canvas (сжатие и стандартизация)
 const convertToJpeg = (file: File): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    // Если файл уже JPEG и небольшого размера, оставляем как есть
-    if (file.type === 'image/jpeg' && file.size < 5 * 1024 * 1024) {
-      resolve(file);
-      return;
-    }
-
+  return new Promise(resolve => {
     const reader = new FileReader();
 
     reader.onload = e => {
@@ -57,9 +51,9 @@ const convertToJpeg = (file: File): Promise<File> => {
             return;
           }
 
-          // Ограничиваем максимальный размер изображения
-          const MAX_WIDTH = 1920;
-          const MAX_HEIGHT = 1920;
+          // Ограничиваем максимальный размер изображения (меньше для уменьшения размера файла)
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
 
           let width = img.width;
           let height = img.height;
@@ -77,22 +71,44 @@ const convertToJpeg = (file: File): Promise<File> => {
           // Рисуем изображение
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Конвертируем canvas в blob
+          // Конвертируем canvas в blob с более низким качеством
           canvas.toBlob(
             blob => {
               if (blob) {
-                const newFile = new File([blob], 'photo.jpg', {
-                  type: 'image/jpeg',
-                  lastModified: Date.now(),
-                });
-                resolve(newFile);
+                // Проверяем размер файла
+                const maxSize = 2 * 1024 * 1024; // 2MB
+
+                if (blob.size > maxSize) {
+                  // Если файл все еще большой, пробуем еще больше сжать
+                  canvas.toBlob(
+                    secondBlob => {
+                      if (secondBlob) {
+                        const newFile = new File([secondBlob], 'photo.jpg', {
+                          type: 'image/jpeg',
+                          lastModified: Date.now(),
+                        });
+                        resolve(newFile);
+                      } else {
+                        resolve(file);
+                      }
+                    },
+                    'image/jpeg',
+                    0.6, // Еще меньше качество
+                  );
+                } else {
+                  const newFile = new File([blob], 'photo.jpg', {
+                    type: 'image/jpeg',
+                    lastModified: Date.now(),
+                  });
+                  resolve(newFile);
+                }
               } else {
                 // Если не удалось создать blob, возвращаем оригинал
                 resolve(file);
               }
             },
             'image/jpeg',
-            0.85,
+            0.75, // Снижаем качество для уменьшения размера
           );
         } catch (error) {
           // При любой ошибке возвращаем оригинальный файл
@@ -150,7 +166,7 @@ const ProfileEditPage: React.FC = () => {
           const convertedBlob = await heic2any({
             blob: file,
             toType: 'image/jpeg',
-            quality: 0.85,
+            quality: 0.7, // Снижаем качество для уменьшения размера
           });
 
           const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
@@ -265,6 +281,7 @@ const ProfileEditPage: React.FC = () => {
           ref={fileInputRef}
           type='file'
           accept='image/*,image/heic,image/heif'
+          capture='environment'
           style={{ display: 'none' }}
           onChange={handlePhotoChange}
         />
@@ -272,6 +289,7 @@ const ProfileEditPage: React.FC = () => {
           <img
             src={photoUrl || `${process.env.REACT_APP_BASE_EMPTY_URL}/static/${userData?.photo_url}`}
             alt='Profile'
+            style={{ opacity: isUploading ? 0.5 : 1 }}
           />
         )}
       </div>
