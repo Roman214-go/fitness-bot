@@ -32,53 +32,90 @@ const validationSchema = Yup.object({
     .max(250, 'Максимум 250 кг'),
 });
 
-// Функция для корректировки ориентации изображения
-const fixImageOrientation = (file: File): Promise<File> => {
+// Функция для конвертации изображения в JPEG через canvas (сжатие и стандартизация)
+const convertToJpeg = (file: File): Promise<File> => {
   return new Promise((resolve, reject) => {
+    // Если файл уже JPEG и небольшого размера, оставляем как есть
+    if (file.type === 'image/jpeg' && file.size < 5 * 1024 * 1024) {
+      resolve(file);
+      return;
+    }
+
     const reader = new FileReader();
 
     reader.onload = e => {
       const img = new Image();
 
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
 
-        if (!ctx) {
-          reject(new Error('Could not get canvas context'));
-          return;
+          if (!ctx) {
+            // Если canvas не работает, возвращаем оригинальный файл
+            resolve(file);
+            return;
+          }
+
+          // Ограничиваем максимальный размер изображения
+          const MAX_WIDTH = 1920;
+          const MAX_HEIGHT = 1920;
+
+          let width = img.width;
+          let height = img.height;
+
+          // Масштабируем если слишком большое
+          if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+            const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+            width = Math.floor(width * ratio);
+            height = Math.floor(height * ratio);
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Рисуем изображение
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Конвертируем canvas в blob
+          canvas.toBlob(
+            blob => {
+              if (blob) {
+                const newFile = new File([blob], 'photo.jpg', {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(newFile);
+              } else {
+                // Если не удалось создать blob, возвращаем оригинал
+                resolve(file);
+              }
+            },
+            'image/jpeg',
+            0.85,
+          );
+        } catch (error) {
+          // При любой ошибке возвращаем оригинальный файл
+          console.warn('Canvas processing failed, using original file:', error);
+          resolve(file);
         }
-
-        // Устанавливаем размеры canvas
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        // Рисуем изображение
-        ctx.drawImage(img, 0, 0);
-
-        // Конвертируем canvas в blob
-        canvas.toBlob(
-          blob => {
-            if (blob) {
-              const newFile = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              });
-              resolve(newFile);
-            } else {
-              reject(new Error('Canvas to Blob conversion failed'));
-            }
-          },
-          'image/jpeg',
-          0.9,
-        );
       };
 
-      img.onerror = () => reject(new Error('Image loading failed'));
+      img.onerror = () => {
+        // Если изображение не загрузилось, возвращаем оригинал
+        console.warn('Image loading failed, using original file');
+        resolve(file);
+      };
+
       img.src = e.target?.result as string;
     };
 
-    reader.onerror = () => reject(new Error('FileReader error'));
+    reader.onerror = () => {
+      // Если FileReader не сработал, возвращаем оригинал
+      console.warn('FileReader failed, using original file');
+      resolve(file);
+    };
+
     reader.readAsDataURL(file);
   });
 };
@@ -100,7 +137,9 @@ const ProfileEditPage: React.FC = () => {
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     let file = e.target.files?.[0];
-    if (!file || !userData?.telegram_id) return;
+    if (!file || !userData?.telegram_id) {
+      return;
+    }
 
     setIsUploading(true);
 
@@ -111,21 +150,22 @@ const ProfileEditPage: React.FC = () => {
           const convertedBlob = await heic2any({
             blob: file,
             toType: 'image/jpeg',
-            quality: 0.9,
+            quality: 0.85,
           });
 
           const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-          file = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), {
+          file = new File([blob], 'photo.jpg', {
             type: 'image/jpeg',
             lastModified: Date.now(),
           });
         } catch (heicError) {
-          console.warn('HEIC conversion failed, trying standard processing:', heicError);
+          console.warn('HEIC conversion failed:', heicError);
+          // Продолжаем с оригинальным файлом
         }
       }
 
-      // Исправление ориентации для всех изображений
-      const processedFile = await fixImageOrientation(file);
+      // Конвертация/оптимизация изображения
+      const processedFile = await convertToJpeg(file);
 
       // Создаем preview URL для отображения
       const previewUrl = URL.createObjectURL(processedFile);
@@ -140,14 +180,13 @@ const ProfileEditPage: React.FC = () => {
 
       // Отправляем на сервер
       const formData = new FormData();
-      formData.append('photo', processedFile);
+      formData.append('photo', processedFile, processedFile.name);
 
       await axiosInstance.put('profile/me/photo', formData, {
         headers: {
           'X-Telegram-Auth': JSON.stringify({
             telegram_id: userData.telegram_id,
           }),
-          'Content-Type': 'multipart/form-data',
         },
       });
 
@@ -164,8 +203,9 @@ const ProfileEditPage: React.FC = () => {
       // Добавляем timestamp чтобы избежать кеширования
       const serverPhotoUrl = `${process.env.REACT_APP_BASE_EMPTY_URL}/static/${res.data.photo_url}?t=${Date.now()}`;
       setPhotoUrl(serverPhotoUrl);
-    } catch (err) {
-      console.error('Ошибка загрузки фото:', err);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error('Photo upload error:', err);
 
       // Очищаем preview в случае ошибки
       if (photoUrl && photoUrl.startsWith('blob:')) {
@@ -179,7 +219,13 @@ const ProfileEditPage: React.FC = () => {
         setPhotoUrl(null);
       }
 
-      alert('Не удалось загрузить фото. Попробуйте еще раз.');
+      // Показываем пользователю более понятное сообщение об ошибке
+      const errorMsg = err.response?.data?.message || err.message;
+      if (errorMsg) {
+        alert(`Ошибка: ${errorMsg}`);
+      } else {
+        alert('Не удалось загрузить фото. Проверьте подключение к интернету.');
+      }
     } finally {
       setIsUploading(false);
       // Сбрасываем input для возможности загрузить то же фото снова
@@ -226,7 +272,6 @@ const ProfileEditPage: React.FC = () => {
           <img
             src={photoUrl || `${process.env.REACT_APP_BASE_EMPTY_URL}/static/${userData?.photo_url}`}
             alt='Profile'
-            style={{ opacity: isUploading ? 0.5 : 1 }}
           />
         )}
       </div>
