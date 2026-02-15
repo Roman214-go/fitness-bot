@@ -347,19 +347,30 @@ export const WorkoutPage: React.FC = () => {
             <span
               className={styles.tooltipIcon}
               data-tooltip-content='На первой тренировке следует правильно выбрать вес для всех упражнений. При тренировках на 8-12 повторений, подберите такой вес, чтобы вы чувствовали запас сил максимум на 1-2 повторения, после выполнения последнего повторения в подходе. Если вы опытный спортсмен, допускается доводить подход до "отказа" При тренировках на 15-19 повторений, подберите такой вес, чтобы последние 5-7 повторений подхода создавали нарастающий эффект "жжения" в тренируемых мышцах. Далее, когда стоит увеличить нагрузку, вам подскажет приложение, но при необходимости её можно изменить самостоятельно в любой момент. Если возникнут вопросы в любой момент можно написать тренеру.'
-              data-tooltip-id='activity-tooltip'
-              style={{ flexShrink: 0 }}
+              data-tooltip-id='workout-tooltip'
+              style={{
+                flexShrink: 0,
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
             >
               ?
             </span>
           </p>
           <Tooltip
-            id='activity-tooltip'
+            id='workout-tooltip'
             className={styles.tooltip}
             place='top'
-            float={true}
             offset={8}
-            positionStrategy='fixed'
+            positionStrategy='absolute'
+            clickable={true}
+            events={['click']}
+            globalCloseEvents={{
+              escape: true,
+              scroll: true,
+              resize: true,
+              clickOutsideAnchor: true,
+            }}
           />
           <div className={styles.weightInput}>
             <input

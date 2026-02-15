@@ -534,6 +534,7 @@ export const MainFormPage = () => {
                   className={styles.tooltipIcon}
                   data-tooltip-content='Фото необходимо тренеру для определения типа осанки и индивидуализации программы тренеровок'
                   data-tooltip-id='activity-tooltip'
+                  data-tooltip-trigger='click'
                 >
                   ?
                 </span>
@@ -542,9 +543,16 @@ export const MainFormPage = () => {
                 id='activity-tooltip'
                 className={styles.tooltip}
                 place='top'
-                float={true}
                 offset={8}
-                positionStrategy='fixed'
+                positionStrategy='absolute'
+                clickable={true}
+                events={['click']}
+                globalCloseEvents={{
+                  escape: true,
+                  scroll: true,
+                  resize: true,
+                  clickOutsideAnchor: true,
+                }}
               />
 
               <div className={styles.photoGrid}>

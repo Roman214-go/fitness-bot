@@ -30,9 +30,11 @@ export const AchievementModal: React.FC<Props> = ({
     if (!telegramId) return;
 
     dispatch(setMainAchievement({ telegramId, achievementId }));
-    dispatch(fetchMyMainAchievement({ telegramId }));
-    onClose();
-    window.scrollTo(0, 0);
+    setTimeout(() => {
+      dispatch(fetchMyMainAchievement({ telegramId }));
+      onClose();
+      window.scrollTo(0, 0);
+    }, 500);
   };
 
   return (
