@@ -12,6 +12,7 @@ import {
 } from '../TrainingPage/api/getTrainee';
 import { FaChevronDown } from 'react-icons/fa';
 import { MdArrowBackIos } from 'react-icons/md';
+import { Tooltip } from 'react-tooltip';
 
 interface PersonalExercise {
   id: number;
@@ -262,7 +263,6 @@ export const WorkoutPage: React.FC = () => {
 
   useEffect(() => {
     if (currentExercise?.weight_kg) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWeight(String(currentExercise.weight_kg));
     } else {
       setWeight('');
@@ -332,10 +332,35 @@ export const WorkoutPage: React.FC = () => {
 
         <div>
           <p
-            style={{ color: '#8F9AA2', marginBottom: '10px', marginLeft: '10px', fontSize: '14px', textAlign: 'start' }}
+            style={{
+              color: '#8F9AA2',
+              marginBottom: '10px',
+              marginLeft: '10px',
+              fontSize: '14px',
+              textAlign: 'start',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+            }}
           >
             При использовании веса в упражнении введите его ниже в кг/lb/сек
+            <span
+              className={styles.tooltipIcon}
+              data-tooltip-content='На первой тренировке следует правильно выбрать вес для всех упражнений. При тренировках на 8-12 повторений, подберите такой вес, чтобы вы чувствовали запас сил максимум на 1-2 повторения, после выполнения последнего повторения в подходе. Если вы опытный спортсмен, допускается доводить подход до "отказа" При тренировках на 15-19 повторений, подберите такой вес, чтобы последние 5-7 повторений подхода создавали нарастающий эффект "жжения" в тренируемых мышцах. Далее, когда стоит увеличить нагрузку, вам подскажет приложение, но при необходимости её можно изменить самостоятельно в любой момент. Если возникнут вопросы в любой момент можно написать тренеру.'
+              data-tooltip-id='activity-tooltip'
+              style={{ flexShrink: 0 }}
+            >
+              ?
+            </span>
           </p>
+          <Tooltip
+            id='activity-tooltip'
+            className={styles.tooltip}
+            place='top'
+            float={true}
+            offset={8}
+            positionStrategy='fixed'
+          />
           <div className={styles.weightInput}>
             <input
               className={styles.input}
