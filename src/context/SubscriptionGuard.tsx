@@ -5,17 +5,29 @@ import { checkSubscriptionStatus } from '../common/utils/checkSubscription';
 
 type Props = {
   children: ReactNode;
+  subscribed?: boolean;
 };
 
-export const SubscriptionGuard = ({ children }: Props) => {
+export const SubscriptionGuard = ({ children, subscribed = false }: Props) => {
   const { authData, userData } = useAppSelector(state => state.auth);
 
   if (!authData) return <>{children}</>;
 
+  const showPaywall = () => {
+    if (subscribed && checkSubscriptionStatus(userData?.subscription)) {
+      return false;
+    }
+
+    if (checkSubscriptionStatus(userData?.subscription) && userData?.has_workout_plan) {
+      return false;
+    }
+
+    return true;
+  };
   return (
     <>
       {children}
-      {(!checkSubscriptionStatus(userData?.subscription) || !userData?.has_workout_plan) && <Paywall />}
+      {showPaywall() && <Paywall />}
     </>
   );
 };

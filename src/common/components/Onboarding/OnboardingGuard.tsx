@@ -17,9 +17,7 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
 
   const pathname = location.pathname;
 
-  if (!userData.medical_history || !userData.body_photos) {
-    console.log(1);
-
+  if (!userData.medical_history || !userData.anthropometric_data.gender) {
     if (pathname !== '/main-form' && pathname !== '/anamnesis-form') {
       if (pathname !== '/onboarding') {
         return <Navigate to='/onboarding' replace />;
@@ -27,14 +25,14 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
       return <>{children}</>;
     }
 
-    if (!userData.body_photos) {
+    if (!userData.anthropometric_data.gender) {
       if (pathname !== '/main-form') {
         return <Navigate to='/main-form' replace />;
       }
       return <>{children}</>;
     }
 
-    if (userData.body_photos && !userData.medical_history) {
+    if (userData.anthropometric_data.gender && !userData.medical_history) {
       if (pathname !== '/anamnesis-form') {
         return <Navigate to='/anamnesis-form' replace />;
       }

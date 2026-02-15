@@ -29,7 +29,7 @@ export const HomeworkPage: React.FC = () => {
   const [completeHomework] = useCompleteHomeworkMutation();
 
   const [timer, setTimer] = useState(0);
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [currentRound, setCurrentRound] = useState(0);
   const [open, setOpen] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -56,11 +56,40 @@ export const HomeworkPage: React.FC = () => {
     return <ErrorScreen isBackButton message='Домашнее задание отсутствует' />;
   }
 
+  // Количество упражнений
+  const exercisesCount = homeworkData.personal_exercises.length;
+
+  // Текущее упражнение определяется циклически
+  let currentExerciseIndex = currentRound % exercisesCount;
+  let currentRoundNum = Math.floor(currentRound / exercisesCount);
+
+  // Пропускаем завершенные упражнения
+  let attempts = 0;
+  let tempRound = currentRound;
+  while (attempts < exercisesCount && currentRoundNum >= homeworkData.personal_exercises[currentExerciseIndex].sets) {
+    tempRound++;
+    currentExerciseIndex = tempRound % exercisesCount;
+    currentRoundNum = Math.floor(tempRound / exercisesCount);
+    attempts++;
+  }
+
   const currentExercise = homeworkData.personal_exercises[currentExerciseIndex];
 
-  const totalExercises = homeworkData.personal_exercises.length;
+  // Общее количество подходов = сумма всех sets
+  const totalSets = homeworkData.personal_exercises.reduce((sum, ex) => sum + ex.sets, 0);
 
-  const isLastExercise = currentExerciseIndex === totalExercises - 1;
+  // Подсчет номера текущего подхода (учитывая только выполненные)
+  let currentSetNumber = 0;
+  for (let i = 0; i <= tempRound; i++) {
+    const exIndex = i % exercisesCount;
+    const round = Math.floor(i / exercisesCount);
+    const exercise = homeworkData.personal_exercises[exIndex];
+    if (round < exercise.sets) {
+      currentSetNumber++;
+    }
+  }
+
+  const isHomeworkCompleted = currentSetNumber >= totalSets;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -70,15 +99,30 @@ export const HomeworkPage: React.FC = () => {
 
   const handleNext = async () => {
     try {
-      if (!isLastExercise) {
-        setCurrentExerciseIndex(prev => prev + 1);
-      } else {
+      if (isHomeworkCompleted) {
         await completeHomework(homeworkList?.[0].id);
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
         setIsCompleted(true);
         setTimeout(() => navigate('/calendar'), 3000);
+      } else {
+        // Переходим к следующему раунду
+        let nextRound = tempRound + 1;
+
+        // Пропускаем уже завершенные упражнения
+        let nextExIndex = nextRound % exercisesCount;
+        let nextRoundNum = Math.floor(nextRound / exercisesCount);
+        let skipped = 0;
+
+        while (skipped < exercisesCount && nextRoundNum >= homeworkData.personal_exercises[nextExIndex].sets) {
+          nextRound++;
+          nextExIndex = nextRound % exercisesCount;
+          nextRoundNum = Math.floor(nextRound / exercisesCount);
+          skipped++;
+        }
+
+        setCurrentRound(nextRound);
       }
     } catch {
       toast.error('Ошибка при завершении упражнения');
@@ -86,6 +130,12 @@ export const HomeworkPage: React.FC = () => {
   };
 
   const strokeDasharray = 2 * Math.PI * 63.75;
+  const radius = 63.75;
+  const circumference = 2 * Math.PI * radius;
+
+  // Прогресс подходов
+  const setProgress = (currentSetNumber / totalSets) * 100;
+  const setStrokeDashoffset = circumference - (setProgress / 100) * circumference;
 
   if (isCompleted) {
     return (
@@ -153,7 +203,8 @@ export const HomeworkPage: React.FC = () => {
                 cx='75'
                 cy='75'
                 r='63.75'
-                strokeDasharray={strokeDasharray}
+                strokeDasharray={circumference}
+                strokeDashoffset={setStrokeDashoffset}
               />
             </svg>
 
@@ -170,7 +221,9 @@ export const HomeworkPage: React.FC = () => {
               >
                 подходы
               </p>
-              <div className={styles.setCounter}>{currentExercise.sets}</div>
+              <div className={styles.setCounter}>
+                {currentSetNumber}/{totalSets}
+              </div>
             </div>
           </div>
 
@@ -208,7 +261,7 @@ export const HomeworkPage: React.FC = () => {
         </div>
 
         <div className={styles.actions}>
-          <Button onClick={handleNext}>{isLastExercise ? 'Завершить' : 'Следующее упражнение'}</Button>
+          <Button onClick={handleNext}>{isHomeworkCompleted ? 'Завершить' : 'Подход выполнен'}</Button>
         </div>
       </div>
 

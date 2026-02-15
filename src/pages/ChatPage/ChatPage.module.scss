@@ -1,5 +1,6 @@
 .chat_container {
   display: flex;
+  padding-top: 40px;
   flex-direction: column;
   height: calc(100vh - 84px);
   background-color: #000;
@@ -193,8 +194,8 @@
 }
 
 .fullscreen_image {
-  max-width: 90vw;
-  max-height: 90vh;
+  max-width: 80vw;
+  max-height: 80vh;
   object-fit: contain;
   cursor: default;
   animation: scaleIn 0.2s ease-in-out;

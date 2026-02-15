@@ -51,28 +51,59 @@ export const WorkoutPage: React.FC = () => {
 
   const [timer, setTimer] = useState<number>(0);
   const [currentSetIndex, setCurrentSetIndex] = useState<number>(0);
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number>(0);
+  const [currentRoundInSet, setCurrentRoundInSet] = useState<number>(0);
   const [weight, setWeight] = useState<string>('');
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
-  const allExercises = workout.personal_sets.flatMap(set => set.personal_exercises);
 
-  const totalExercises = allExercises.length;
   const currentSet = workout.personal_sets[currentSetIndex];
+
+  // Количество упражнений в сете
+  const exercisesCount = currentSet.personal_exercises.length;
+
+  // Общее количество подходов в сете = сумма всех reps
+  const totalRepsInSet = currentSet.personal_exercises.reduce((sum, ex) => sum + ex.reps, 0);
+
+  // Находим текущее упражнение, пропуская завершенные
+  let currentExerciseIndex = currentRoundInSet % exercisesCount;
+  let currentRound = Math.floor(currentRoundInSet / exercisesCount);
+
+  // Пропускаем завершенные упражнения
+  let attempts = 0;
+  while (attempts < exercisesCount && currentRound >= currentSet.personal_exercises[currentExerciseIndex].reps) {
+    currentRoundInSet++;
+    currentExerciseIndex = currentRoundInSet % exercisesCount;
+    currentRound = Math.floor(currentRoundInSet / exercisesCount);
+    attempts++;
+  }
+
   const currentExercise = currentSet.personal_exercises[currentExerciseIndex];
-  const currentExerciseGlobalIndex =
-    workout.personal_sets.slice(0, currentSetIndex).reduce((acc, set) => acc + set.personal_exercises.length, 0) +
-    currentExerciseIndex +
-    1;
 
-  const totalExercisesInSet = currentSet.personal_exercises.length;
-  const progress = (currentExerciseGlobalIndex / totalExercises) * 100;
+  // Проверяем, не превышает ли текущий раунд количество reps для данного упражнения
+  const isExerciseCompleted = currentRound >= currentExercise.reps;
 
-  const isLastExerciseInSet = currentExerciseIndex === totalExercisesInSet - 1;
-  const isLastSet = currentSetIndex === workout.personal_sets.length - 1 && isLastExerciseInSet;
+  // Подсчет номера текущего подхода (учитывая только выполненные)
+  let currentRepNumber = 0;
+  for (let i = 0; i <= currentRoundInSet; i++) {
+    const exIndex = i % exercisesCount;
+    const round = Math.floor(i / exercisesCount);
+    const exercise = currentSet.personal_exercises[exIndex];
+    if (round < exercise.reps) {
+      currentRepNumber++;
+    }
+  }
+
+  // Сет завершен когда currentRepNumber достиг totalRepsInSet
+  const isSetCompleted = currentRepNumber >= totalRepsInSet;
+  const isLastSet = currentSetIndex === workout.personal_sets.length - 1;
+
   const timerRef = useRef(null);
 
   const radius = 63.75;
   const circumference = 2 * Math.PI * radius;
+
+  // Прогресс подходов в сете
+  const repProgress = (currentRepNumber / totalRepsInSet) * 100;
+  const repStrokeDashoffset = circumference - (repProgress / 100) * circumference;
 
   const notificationText =
     'На этой тренировке следует поднять нагрузку с помощью дополнительного отягощения. Для этого сделайте подъем на один шаг в весе в каждом упражнении. Если в каком-то упражнении Вы не сможете реализовать заданое количество повторений с новой нагрузкой, то оставьте для этого упражнения старое значение веса. Если у Вас появяться какие-либо вопросы, то следует написать тренеру.';
@@ -117,27 +148,58 @@ export const WorkoutPage: React.FC = () => {
 
   const handleComplete = async () => {
     try {
-      await completeExercise({
-        exerciseId: currentExercise.id,
-        weight: weight ? Number(weight) : undefined,
-      }).unwrap();
-
-      if (isLastExerciseInSet) {
-        await completeSet(currentSet.id).unwrap();
+      // Выполняем API запрос только если упражнение еще не завершено
+      if (!isExerciseCompleted) {
+        await completeExercise({
+          exerciseId: currentExercise.id,
+          weight: weight ? Number(weight) : undefined,
+        }).unwrap();
       }
 
-      if (!isLastExerciseInSet) {
-        setCurrentExerciseIndex(prev => prev + 1);
-      } else if (!isLastSet) {
-        setCurrentSetIndex(prev => prev + 1);
-        setCurrentExerciseIndex(0);
+      // Переходим к следующему раунду
+      let nextRound = currentRoundInSet + 1;
+
+      // Пропускаем уже завершенные упражнения
+      let nextExIndex = nextRound % exercisesCount;
+      let nextRoundNum = Math.floor(nextRound / exercisesCount);
+      let skipped = 0;
+
+      while (skipped < exercisesCount && nextRoundNum >= currentSet.personal_exercises[nextExIndex].reps) {
+        nextRound++;
+        nextExIndex = nextRound % exercisesCount;
+        nextRoundNum = Math.floor(nextRound / exercisesCount);
+        skipped++;
+      }
+
+      // Проверяем, завершен ли сет
+      let completedCount = 0;
+      for (let i = 0; i <= nextRound; i++) {
+        const exIndex = i % exercisesCount;
+        const round = Math.floor(i / exercisesCount);
+        const exercise = currentSet.personal_exercises[exIndex];
+        if (round < exercise.reps) {
+          completedCount++;
+        }
+      }
+
+      if (completedCount >= totalRepsInSet) {
+        await completeSet(currentSet.id).unwrap();
+
+        // Если это последний сет
+        if (isLastSet) {
+          await completeWorkout(workout_date.id).unwrap();
+          toast.success('Тренировка завершена!');
+          if (timerRef.current) clearInterval(timerRef.current);
+          setIsCompleted(true);
+          setTimeout(() => navigate('/calendar'), 3000);
+          return;
+        } else {
+          // Переход к следующему сету
+          setCurrentSetIndex(prev => prev + 1);
+          setCurrentRoundInSet(0);
+        }
       } else {
-        await completeWorkout(workout_date.id).unwrap();
-        toast.success('Тренировка завершена!');
-        if (timerRef.current) clearInterval(timerRef.current);
-        setIsCompleted(true);
-        setTimeout(() => navigate('/calendar'), 3000);
-        return;
+        setCurrentRoundInSet(nextRound);
       }
 
       setWeight('');
@@ -148,27 +210,55 @@ export const WorkoutPage: React.FC = () => {
 
   const handleSkip = async () => {
     try {
-      await incompleteExercise({ exerciseId: currentExercise.id });
-      if (!isLastExerciseInSet) {
-        setCurrentExerciseIndex(prev => prev + 1);
-      } else if (!isLastSet) {
-        setCurrentSetIndex(prev => prev + 1);
-        setCurrentExerciseIndex(0);
+      if (!isExerciseCompleted) {
+        await incompleteExercise({ exerciseId: currentExercise.id });
+      }
+
+      // Переходим к следующему раунду
+      let nextRound = currentRoundInSet + 1;
+
+      // Пропускаем уже завершенные упражнения
+      let nextExIndex = nextRound % exercisesCount;
+      let nextRoundNum = Math.floor(nextRound / exercisesCount);
+      let skipped = 0;
+
+      while (skipped < exercisesCount && nextRoundNum >= currentSet.personal_exercises[nextExIndex].reps) {
+        nextRound++;
+        nextExIndex = nextRound % exercisesCount;
+        nextRoundNum = Math.floor(nextRound / exercisesCount);
+        skipped++;
+      }
+
+      // Проверяем, завершен ли сет
+      let completedCount = 0;
+      for (let i = 0; i <= nextRound; i++) {
+        const exIndex = i % exercisesCount;
+        const round = Math.floor(i / exercisesCount);
+        const exercise = currentSet.personal_exercises[exIndex];
+        if (round < exercise.reps) {
+          completedCount++;
+        }
+      }
+
+      if (completedCount >= totalRepsInSet) {
+        if (isLastSet) {
+          await completeWorkout(workout_date.id).unwrap();
+          toast.success('Тренировка завершена!');
+          if (timerRef.current) clearInterval(timerRef.current);
+          setIsCompleted(true);
+          setTimeout(() => navigate('/calendar'), 3000);
+          return;
+        } else {
+          setCurrentSetIndex(prev => prev + 1);
+          setCurrentRoundInSet(0);
+        }
       } else {
-        await completeWorkout(workout_date.id).unwrap();
-        toast.success('Тренировка завершена!');
-        if (timerRef.current) clearInterval(timerRef.current);
-        setIsCompleted(true);
-        setTimeout(() => navigate('/calendar'), 3000);
-        return;
+        setCurrentRoundInSet(nextRound);
       }
     } catch {
       toast.error('Не удалось завершить упражнение');
     }
   };
-
-  const strokeDasharray = 2 * Math.PI * 63.75;
-  const strokeDashoffset = strokeDasharray - (progress / 100) * strokeDasharray;
 
   useEffect(() => {
     if (currentExercise?.weight_kg) {
@@ -258,7 +348,7 @@ export const WorkoutPage: React.FC = () => {
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-          {/* 🔵 Общий прогресс */}
+          {/* 🔵 Прогресс подходов в сете */}
           <div className={styles.progressContainer}>
             <svg className={styles.progressRing} width='150' height='150'>
               <circle className={styles.progressRingBackground} cx='75' cy='75' r='63.75' />
@@ -267,18 +357,21 @@ export const WorkoutPage: React.FC = () => {
                 cx='75'
                 cy='75'
                 r='63.75'
-                strokeDashoffset={strokeDashoffset}
+                strokeDasharray={circumference}
+                strokeDashoffset={repStrokeDashoffset}
               />
             </svg>
             <div className={styles.progressContent}>
               <p style={{ fontSize: '14px', position: 'absolute', top: '-15px', color: '#666', lineHeight: 0.7 }}>
                 подходы
               </p>
-              <div className={styles.setCounter}>{currentExercise.reps}</div>
+              <div className={styles.setCounter}>
+                {currentRepNumber}/{totalRepsInSet}
+              </div>
             </div>
           </div>
 
-          {/* 🟢 Прогресс в сете */}
+          {/* 🟢 Повторения текущего упражнения */}
           <div className={styles.progressContainer}>
             <svg className={styles.progressRing} width='150' height='150'>
               <circle cx='75' cy='75' r={radius} className={styles.progressRingBackground} />
@@ -306,7 +399,7 @@ export const WorkoutPage: React.FC = () => {
 
         <div className={styles.actions}>
           <Button onClick={handleComplete} disabled={isCompleting || isCompletingWorkout}>
-            {isLastExerciseInSet ? 'Сет выполнен' : 'Упражнение выполнено'}
+            {isSetCompleted ? 'Сет выполнен' : 'Подход выполнен'}
           </Button>
 
           <Button buttonType='secondary' onClick={handleSkip}>

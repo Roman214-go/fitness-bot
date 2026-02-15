@@ -3,6 +3,7 @@ import { BsX } from 'react-icons/bs';
 import styles from './ChatPage.module.scss';
 import { useAppSelector } from '../../common/store/hooks';
 import { process } from '../../common/constants/process';
+import { checkSubscriptionStatus } from '../../common/utils/checkSubscription';
 
 interface Message {
   id: string;
@@ -78,7 +79,7 @@ export const ChatPage: React.FC = () => {
      Инициализация чата
   ======================= */
   useEffect(() => {
-    if (!userData?.has_workout_plan) return;
+    if (!checkSubscriptionStatus(userData?.subscription)) return;
     const initChat = async () => {
       try {
         const res = await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/my`, {
@@ -111,7 +112,7 @@ export const ChatPage: React.FC = () => {
      SSE подключение
   ======================= */
   useEffect(() => {
-    if (!chatId || !userData?.has_workout_plan) return;
+    if (!chatId) return;
 
     const token = encodeURIComponent(JSON.stringify(currentUser));
     const es = new EventSource(

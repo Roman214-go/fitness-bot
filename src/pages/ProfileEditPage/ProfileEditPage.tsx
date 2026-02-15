@@ -337,6 +337,11 @@ const ProfileEditPage: React.FC = () => {
                   },
                 },
               );
+              await axiosInstance.get('profile/me/nutrition/calculate', {
+                headers: {
+                  'X-Telegram-Auth': JSON.stringify({ telegram_id: userData?.telegram_id }),
+                },
+              });
             }
 
             const res = await axiosInstance.get(`/users/telegram/${userData?.telegram_id}`, {

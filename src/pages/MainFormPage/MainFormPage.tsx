@@ -58,7 +58,7 @@ const FILE_SIZE = 2 * 1024 * 1024; // Уменьшено до 2MB
 const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/png', 'image/webp'];
 
 const photoValidation = Yup.mixed<File>()
-  .required('Фото обязательно')
+  .nullable()
   .test('fileSize', 'Размер файла не более 2MB', file => !file || file.size <= FILE_SIZE)
   .test('fileFormat', 'Поддерживаются только JPG, PNG, WEBP', file => !file || SUPPORTED_FORMATS.includes(file.type));
 
@@ -253,7 +253,7 @@ export const MainFormPage = () => {
       back_photo: photoValidation,
       left_front_photo: photoValidation,
       left_incline_photo: photoValidation,
-    }),
+    }).optional(),
   });
 
   useEffect(() => {

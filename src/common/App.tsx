@@ -57,7 +57,7 @@ const App = () => {
                   userData?.role.name === 'admin' ? (
                     <AdminChatPage />
                   ) : (
-                    <SubscriptionGuard>
+                    <SubscriptionGuard subscribed>
                       <ChatPage />
                     </SubscriptionGuard>
                   )
