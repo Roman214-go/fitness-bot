@@ -9,19 +9,28 @@ export const Paywall = () => {
   const navigate = useNavigate();
   const { userData } = useAppSelector(state => state.auth);
 
+  const isPaused = () => {
+    if (!userData?.subscription) {
+      return false;
+    }
+    if (userData.subscription.status === 'pause') {
+      return true;
+    }
+    return false;
+  };
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
         <div className={styles.lock}>🔒</div>
         <h3>
-          {!checkSubscriptionStatus(userData?.subscription)
-            ? 'Пожалуйста приобретите подписку'
-            : 'Ваша программа тренировок уже создается, подождите'}
+          {checkSubscriptionStatus(userData?.subscription) || isPaused()
+            ? 'Ваша программа тренировок уже создается, подождите'
+            : 'Пожалуйста приобретите подписку'}
         </h3>
         <p>чтобы воспользоваться этой функцией</p>
-        {!checkSubscriptionStatus(userData?.subscription) ? (
+        {checkSubscriptionStatus(userData?.subscription) || isPaused() ? null : (
           <Button onClick={() => navigate('/onboarding')}>Перейти</Button>
-        ) : null}
+        )}
       </div>
     </div>
   );

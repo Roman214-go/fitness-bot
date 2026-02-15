@@ -94,7 +94,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
       ).unwrap();
 
       if (result.success && result.payment_url) {
-        window.location.href = result.payment_url;
+        window.open(result.payment_url, '_blank');
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         !userData.anthropometric_data
           ? navigate('/main-form')
