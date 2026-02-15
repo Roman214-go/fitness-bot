@@ -72,7 +72,7 @@ export const PaymentSwiper = () => {
           dispatch(setUserData(res.data));
 
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-          !userData.anthropometric_data.gender
+          !userData.anthropometric_data
             ? navigate('/main-form')
             : !userData.medical_history
               ? navigate('/anamnesis-form')
