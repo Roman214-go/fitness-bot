@@ -33,18 +33,36 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
   const validationSchema = Yup.object({
     email: Yup.string().email('Неверный email').required('Обязательное поле'),
     cardNumber: Yup.string()
-      .matches(/^\d{16}$/, 'Неверный номер карты')
+      .test('card-length', 'Номер карты должен содержать 16 цифр', value => {
+        if (!value) return false;
+        return value.replace(/\D/g, '').length === 16;
+      })
       .required('Обязательное поле'),
     expMonth: Yup.string()
-      .matches(/^(0?[1-9]|1[0-2])$/, 'Неверный месяц')
+      .test('month-valid', 'Месяц должен быть от 01 до 12', value => {
+        if (!value) return false;
+        const month = parseInt(value);
+        return month >= 1 && month <= 12;
+      })
       .required('Обязательное поле'),
     expYear: Yup.string()
-      .matches(/^\d{4}$/, 'Неверный год')
+      .test('year-valid', 'Некорректный год', value => {
+        if (!value) return false;
+        const numValue = value.replace(/\D/g, '');
+        if (numValue.length !== 4) return false;
+        const year = parseInt(numValue);
+        const currentYear = new Date().getFullYear();
+        return year >= currentYear && year <= currentYear + 20;
+      })
       .required('Обязательное поле'),
     cvc: Yup.string()
-      .matches(/^\d{3,4}$/, 'Неверный CVC')
+      .test('cvc-valid', 'CVC должен содержать 3 или 4 цифры', value => {
+        if (!value) return false;
+        const digits = value.replace(/\D/g, '');
+        return digits.length === 3 || digits.length === 4;
+      })
       .required('Обязательное поле'),
-    cardHolder: Yup.string().required('Обязательное поле'),
+    cardHolder: Yup.string().min(2, 'Минимум 2 символа').required('Обязательное поле'),
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,11 +76,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
       return_url: process.env.APP_URL,
       language: 'ru',
       credit_card: {
-        number: String(values.cardNumber),
-        verification_value: String(values.cvc),
+        number: values.cardNumber,
+        verification_value: values.cvc,
         holder: values.cardHolder,
-        exp_month: String(values.expMonth).padStart(2, '0'),
-        exp_year: String(values.expYear),
+        exp_month: values.expMonth.padStart(2, '0'),
+        exp_year: values.expYear,
       },
       card_holder: values.cardHolder,
     };
@@ -123,7 +141,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
                 <Field name='cardNumber'>
                   {({ field, form }: FieldProps) => (
                     <input
-                      {...field}
+                      value={field.value}
+                      onChange={e => form.setFieldValue('cardNumber', e.target.value)}
+                      onBlur={field.onBlur}
+                      name={field.name}
                       type='number'
                       placeholder='Номер карты'
                       className={`${styles.input} ${form.touched.cardNumber && form.errors.cardNumber ? styles.error : ''}`}
@@ -134,7 +155,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
                   <Field name='expMonth'>
                     {({ field, form }: FieldProps) => (
                       <input
-                        {...field}
+                        value={field.value}
+                        onChange={e => form.setFieldValue('expMonth', e.target.value)}
+                        onBlur={field.onBlur}
+                        name={field.name}
                         type='number'
                         placeholder='MM'
                         className={`${styles.input} ${form.touched.expMonth && form.errors.expMonth ? styles.error : ''}`}
@@ -144,9 +168,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
                   <Field name='expYear'>
                     {({ field, form }: FieldProps) => (
                       <input
-                        {...field}
+                        value={field.value}
+                        onChange={e => form.setFieldValue('expYear', e.target.value)}
+                        onBlur={field.onBlur}
+                        name={field.name}
                         type='number'
-                        placeholder='YY'
+                        placeholder='YYYY'
                         className={`${styles.input} ${form.touched.expYear && form.errors.expYear ? styles.error : ''}`}
                       />
                     )}
@@ -154,7 +181,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
                   <Field name='cvc'>
                     {({ field, form }: FieldProps) => (
                       <input
-                        {...field}
+                        value={field.value}
+                        onChange={e => form.setFieldValue('cvc', e.target.value)}
+                        onBlur={field.onBlur}
+                        name={field.name}
                         type='number'
                         placeholder='CVC'
                         className={`${styles.input} ${form.touched.cvc && form.errors.cvc ? styles.error : ''}`}
