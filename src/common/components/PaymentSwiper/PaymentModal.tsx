@@ -9,6 +9,7 @@ import * as Yup from 'yup';
 import { SubscriptionPlan } from './api/subscriptionApi';
 import { createPayment } from './api/paymentSlice';
 import { process } from '../../constants/process';
+import { useNavigate } from 'react-router-dom';
 
 interface PaymentModalProps {
   plan: SubscriptionPlan;
@@ -19,7 +20,7 @@ interface PaymentModalProps {
 export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onClose }) => {
   const dispatch = useAppDispatch();
   const { userData } = useAppSelector(state => state.auth);
-
+  const navigate = useNavigate();
   const initialValues = {
     email: '',
     cardNumber: '',
@@ -35,7 +36,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
       .matches(/^\d{16}$/, 'Неверный номер карты')
       .required('Обязательное поле'),
     expMonth: Yup.string()
-      .matches(/^(0[1-9]|1[0-2])$/, 'Неверный месяц')
+      .matches(/^(0?[1-9]|1[0-2])$/, 'Неверный месяц')
       .required('Обязательное поле'),
     expYear: Yup.string()
       .matches(/^\d{4}$/, 'Неверный год')
@@ -57,11 +58,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
       return_url: process.env.APP_URL,
       language: 'ru',
       credit_card: {
-        number: values.cardNumber,
-        verification_value: values.cvc,
+        number: String(values.cardNumber),
+        verification_value: String(values.cvc),
         holder: values.cardHolder,
-        exp_month: values.expMonth,
-        exp_year: values.expYear,
+        exp_month: String(values.expMonth).padStart(2, '0'),
+        exp_year: String(values.expYear),
       },
       card_holder: values.cardHolder,
     };
@@ -76,6 +77,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
 
       if (result.success && result.payment_url) {
         window.location.href = result.payment_url;
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        !userData.anthropometric_data
+          ? navigate('/main-form')
+          : !userData.medical_history
+            ? navigate('/anamnesis-form')
+            : navigate('/');
       } else {
         toast.error('Ошибка при создании платежа');
       }
