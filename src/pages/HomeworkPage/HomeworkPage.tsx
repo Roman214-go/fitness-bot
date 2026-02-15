@@ -1,32 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
+
 import Button from '../../common/components/Button';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
-import styles from './HomeworkPage.module.scss';
-import { useCompleteSetMutation, useCompleteWorkoutMutation } from '../TrainingPage/api/getTrainee';
 import { FaChevronDown } from 'react-icons/fa';
-import { useGetAllHomeworkQuery } from './api/getHomework';
+import { useCompleteHomeworkMutation, useGetAllHomeworkQuery, useGetHomeworkByIdQuery } from './api/getHomework';
 import { ErrorScreen } from '../ErrorScreen/ErrorScreen';
 import Loader from '../../common/components/Loader';
 
+import styles from './HomeworkPage.module.scss';
+
 export const HomeworkPage: React.FC = () => {
-  const { data: homeworkData, isLoading, error } = useGetAllHomeworkQuery();
   const navigate = useNavigate();
 
-  const [completeSet] = useCompleteSetMutation();
-  const [completeWorkout] = useCompleteWorkoutMutation();
+  const { data: homeworkList, isLoading: isHomeworkListLoading, error: homeworkListError } = useGetAllHomeworkQuery();
+
+  const personalHomeworkId = homeworkList?.[0]?.personal_homework_id;
+
+  const {
+    data: homeworkData,
+    isLoading: isHomeworkLoading,
+    error: homeworkError,
+  } = useGetHomeworkByIdQuery(personalHomeworkId!, {
+    skip: !personalHomeworkId,
+  });
+
+  const [completeHomework] = useCompleteHomeworkMutation();
 
   const [timer, setTimer] = useState(0);
-  const [currentHomeworkIndex, setCurrentHomeworkIndex] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [open, setOpen] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const timerRef = useRef(null);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
     timerRef.current = setInterval(() => {
       setTimer(prev => prev + 1);
     }, 1000);
@@ -37,24 +45,22 @@ export const HomeworkPage: React.FC = () => {
       }
     };
   }, []);
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorScreen isBackButton message={'Ошибка получения домашнего задания'} />;
-  if (!homeworkData || homeworkData.length === 0)
-    return <ErrorScreen isBackButton message={'Домашнее задание отсутствует'} />;
 
-  const currentHomework = homeworkData[currentHomeworkIndex];
-  const currentExercise = currentHomework.personal_exercises[currentExerciseIndex];
+  if (isHomeworkListLoading || isHomeworkLoading) return <Loader />;
 
-  const totalExercises = currentHomework.personal_exercises.length;
+  if (homeworkListError || homeworkError) {
+    return <ErrorScreen isBackButton message='Ошибка получения домашнего задания' />;
+  }
+
+  if (!homeworkData || homeworkData.personal_exercises.length === 0) {
+    return <ErrorScreen isBackButton message='Домашнее задание отсутствует' />;
+  }
+
+  const currentExercise = homeworkData.personal_exercises[currentExerciseIndex];
+
+  const totalExercises = homeworkData.personal_exercises.length;
+
   const isLastExercise = currentExerciseIndex === totalExercises - 1;
-  const isLastHomework = currentHomeworkIndex === homeworkData.length - 1 && isLastExercise;
-  const allExercises = homeworkData.flatMap(homework => homework.personal_exercises);
-
-  const totalExercisesGlobal = allExercises.length;
-  const currentExerciseGlobalIndex =
-    homeworkData.slice(0, currentHomeworkIndex).reduce((acc, hw) => acc + hw.personal_exercises.length, 0) +
-    currentExerciseIndex +
-    1;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -64,48 +70,22 @@ export const HomeworkPage: React.FC = () => {
 
   const handleNext = async () => {
     try {
-      toast('Обновляем прогресс...');
-      if (isLastExercise) {
-        await completeSet(currentHomework.id).unwrap();
-        toast.success('Сет завершён!');
-      }
-
       if (!isLastExercise) {
-        setCurrentExerciseIndex(currentExerciseIndex + 1);
-      } else if (!isLastHomework) {
-        setCurrentHomeworkIndex(currentHomeworkIndex + 1);
-        setCurrentExerciseIndex(0);
+        setCurrentExerciseIndex(prev => prev + 1);
       } else {
-        await completeWorkout(currentHomework.id).unwrap();
-        toast.success('Домашнее задание завершено!');
+        await completeHomework(homeworkList?.[0].id);
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
-
         setIsCompleted(true);
         setTimeout(() => navigate('/calendar'), 3000);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error('Ошибка при завершении упражнения');
     }
   };
 
-  const handleSkip = () => {
-    if (!isLastExercise) {
-      setCurrentExerciseIndex(currentExerciseIndex + 1);
-    } else if (!isLastHomework) {
-      setCurrentHomeworkIndex(currentHomeworkIndex + 1);
-      setCurrentExerciseIndex(0);
-    } else {
-      setIsCompleted(true);
-      setTimeout(() => navigate('/calendar'), 2500);
-    }
-  };
-
-  const progress = (currentExerciseGlobalIndex / totalExercisesGlobal) * 100;
   const strokeDasharray = 2 * Math.PI * 63.75;
-  const strokeDashoffset = strokeDasharray - (progress / 100) * strokeDasharray;
 
   if (isCompleted) {
     return (
@@ -148,6 +128,7 @@ export const HomeworkPage: React.FC = () => {
               />
             </div>
           </div>
+
           <div
             style={{
               maxHeight: open ? '200px' : '0',
@@ -163,43 +144,71 @@ export const HomeworkPage: React.FC = () => {
             </p>
           </div>
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+          <div className={styles.progressContainer}>
+            <svg className={styles.progressRing} width='150' height='150'>
+              <circle className={styles.progressRingBackground} cx='75' cy='75' r='63.75' />
+              <circle
+                className={styles.progressRingCircle}
+                cx='75'
+                cy='75'
+                r='63.75'
+                strokeDasharray={strokeDasharray}
+              />
+            </svg>
 
-        <div className={styles.progressContainer}>
-          <svg className={styles.progressRing} width='150' height='150'>
-            <circle className={styles.progressRingBackground} cx='75' cy='75' r='63.75' />
-            <circle
-              className={styles.progressRingCircle}
-              cx='75'
-              cy='75'
-              r='63.75'
-              strokeDasharray={strokeDasharray}
-              strokeDashoffset={strokeDashoffset}
-            />
-          </svg>
-          <div className={styles.progressContent}>
-            <p
-              style={{
-                fontSize: '14px',
-                position: 'absolute',
-                marginLeft: '10px',
-                top: '-15px',
-                color: '#666',
-                lineHeight: 0.7,
-              }}
-            >
-              подходы
-            </p>
-            <div className={styles.setCounter}>
-              {currentExerciseGlobalIndex}/{totalExercisesGlobal}
+            <div className={styles.progressContent}>
+              <p
+                style={{
+                  fontSize: '14px',
+                  position: 'absolute',
+                  marginLeft: '10px',
+                  top: '-15px',
+                  color: '#666',
+                  lineHeight: 0.7,
+                }}
+              >
+                подходы
+              </p>
+              <div className={styles.setCounter}>{currentExercise.sets}</div>
+            </div>
+          </div>
+
+          <div className={styles.progressContainer}>
+            <svg className={styles.progressRing} width='150' height='150'>
+              <circle className={styles.progressRingBackground} cx='75' cy='75' r='63.75' />
+              <circle
+                className={styles.progressRingCircle}
+                cx='75'
+                cy='75'
+                r='63.75'
+                strokeDasharray={strokeDasharray}
+              />
+            </svg>
+
+            <div className={styles.progressContent}>
+              <p
+                style={{
+                  fontSize: '14px',
+                  position: 'absolute',
+                  marginLeft: '10px',
+                  top: '-15px',
+                  color: '#666',
+                  lineHeight: 0.7,
+                }}
+              >
+                выполнять
+              </p>
+              <div className={styles.setCounter}>{currentExercise.duration_seconds} c</div>
             </div>
           </div>
         </div>
+        <div className={styles.progressInfo}>
+          <div className={styles.infoLabel}>Рекомендуем отдыхать 2-3 минуты между подходами</div>
+        </div>
 
         <div className={styles.actions}>
-          <Button onClick={handleNext}>Следующее упражнение</Button>
-          <Button buttonType='secondary' onClick={handleSkip}>
-            Пропустить
-          </Button>
+          <Button onClick={handleNext}>{isLastExercise ? 'Завершить' : 'Следующее упражнение'}</Button>
         </div>
       </div>
 

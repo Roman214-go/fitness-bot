@@ -85,7 +85,7 @@ export const TrainingPage: React.FC = () => {
 
       <div className={styles.content}>
         <p className={styles.repeatCount}>
-          Количество повторений: <span style={{ color: '#c4ff4d' }}>{workout.repetitions}</span>
+          количество упражнений: <span style={{ color: '#c4ff4d' }}>{exercises.length}</span>
         </p>
 
         <div className={styles.exerciseList}>

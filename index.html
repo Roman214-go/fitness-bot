@@ -28,6 +28,11 @@
       if (tg) {
         tg.ready();
         tg.expand();
+        tg.disableVerticalSwipes();
+
+        tg.requestFullscreen();
+
+        tg.enableClosingConfirmation();
       }
     </script>
     <script type="module" src="/src/main.tsx"></script>

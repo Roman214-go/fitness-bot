@@ -71,6 +71,9 @@ export const WorkoutPage: React.FC = () => {
   const isLastSet = currentSetIndex === workout.personal_sets.length - 1 && isLastExerciseInSet;
   const timerRef = useRef(null);
 
+  const radius = 63.75;
+  const circumference = 2 * Math.PI * radius;
+
   const notificationText =
     'На этой тренировке следует поднять нагрузку с помощью дополнительного отягощения. Для этого сделайте подъем на один шаг в весе в каждом упражнении. Если в каком-то упражнении Вы не сможете реализовать заданое количество повторений с новой нагрузкой, то оставьте для этого упражнения старое значение веса. Если у Вас появяться какие-либо вопросы, то следует написать тренеру.';
 
@@ -241,7 +244,7 @@ export const WorkoutPage: React.FC = () => {
           <p
             style={{ color: '#8F9AA2', marginBottom: '10px', marginLeft: '10px', fontSize: '14px', textAlign: 'start' }}
           >
-            При использовании веса в упражнении, введите его ниже в кг
+            При использовании веса в упражнении введите его ниже в кг/lb/сек
           </p>
           <div className={styles.weightInput}>
             <input
@@ -254,25 +257,45 @@ export const WorkoutPage: React.FC = () => {
             />
           </div>
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+          {/* 🔵 Общий прогресс */}
+          <div className={styles.progressContainer}>
+            <svg className={styles.progressRing} width='150' height='150'>
+              <circle className={styles.progressRingBackground} cx='75' cy='75' r='63.75' />
+              <circle
+                className={styles.progressRingCircle}
+                cx='75'
+                cy='75'
+                r='63.75'
+                strokeDashoffset={strokeDashoffset}
+              />
+            </svg>
+            <div className={styles.progressContent}>
+              <p style={{ fontSize: '14px', position: 'absolute', top: '-15px', color: '#666', lineHeight: 0.7 }}>
+                подходы
+              </p>
+              <div className={styles.setCounter}>{currentExercise.reps}</div>
+            </div>
+          </div>
 
-        <div className={styles.progressContainer}>
-          <svg className={styles.progressRing} width='150' height='150'>
-            <circle className={styles.progressRingBackground} cx='75' cy='75' r='63.75' />
-            <circle
-              className={styles.progressRingCircle}
-              cx='75'
-              cy='75'
-              r='63.75'
-              strokeDasharray={strokeDasharray}
-              strokeDashoffset={strokeDashoffset}
-            />
-          </svg>
-          <div className={styles.progressContent}>
-            <p style={{ fontSize: '14px', position: 'absolute', top: '-15px', color: '#666', lineHeight: 0.7 }}>
-              подходы
-            </p>
-            <div className={styles.setCounter}>
-              {currentExerciseGlobalIndex}/{totalExercises}
+          {/* 🟢 Прогресс в сете */}
+          <div className={styles.progressContainer}>
+            <svg className={styles.progressRing} width='150' height='150'>
+              <circle cx='75' cy='75' r={radius} className={styles.progressRingBackground} />
+              <circle
+                cx='75'
+                cy='75'
+                r={radius}
+                className={styles.progressRingCircleEx}
+                strokeDasharray={circumference}
+              />
+            </svg>
+
+            <div className={styles.progressContent}>
+              <p style={{ fontSize: '14px', position: 'absolute', top: '-15px', color: '#666', lineHeight: 0.7 }}>
+                повторения
+              </p>
+              <div className={styles.setCounter}>{workout.repetitions}</div>
             </div>
           </div>
         </div>

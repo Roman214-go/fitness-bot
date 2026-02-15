@@ -22,9 +22,20 @@ export const getHomework = createApi({
 
   endpoints: builder => ({
     getAllHomework: builder.query<any[], void>({
-      query: () => '/homework/my?limit=100&offset=0',
+      query: () => '/homework/my/today',
+    }),
+
+    getHomeworkById: builder.query<any, number>({
+      query: homeworkId => `/homework/my/${homeworkId}`,
+    }),
+
+    completeHomework: builder.mutation<void, number>({
+      query: homeworkDateId => ({
+        url: `/homework/homework-dates/${homeworkDateId}/complete`,
+        method: 'POST',
+      }),
     }),
   }),
 });
 
-export const { useGetAllHomeworkQuery } = getHomework;
+export const { useGetAllHomeworkQuery, useGetHomeworkByIdQuery, useCompleteHomeworkMutation } = getHomework;
