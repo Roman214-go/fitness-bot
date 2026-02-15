@@ -282,7 +282,7 @@ export const CalendarPage: React.FC = () => {
         .workout-calendar {
           color: #ffffff;
           padding: 20px;
-          padding-top: 40px;
+          padding-top: 90px;
           border-radius: 16px;
           margin: 0 auto;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
