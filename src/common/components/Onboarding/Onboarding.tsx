@@ -77,7 +77,7 @@ export const Onboarding = () => {
   };
 
   return (
-    <div className={styles.wrapper} style={{ padding: isLastSlide ? '0' : '5%' }}>
+    <div className={styles.wrapper} style={{ padding: isLastSlide ? '0' : '5%', paddingTop: '90px' }}>
       {!isLastSlide ? (
         activeIndex === 0 ? (
           <div />
