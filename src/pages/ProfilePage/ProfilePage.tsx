@@ -232,6 +232,7 @@ export const ProfilePage: React.FC = () => {
               <div className={styles.achievements}>
                 {mergedAchievements.map(item => (
                   <Achievement
+                    mainAchievementId={myMainAchievement?.id}
                     key={item.id}
                     achievementId={item.id}
                     title={item.name}

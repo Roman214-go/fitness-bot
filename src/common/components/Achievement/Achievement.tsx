@@ -9,11 +9,13 @@ interface AchievementProps {
   achievementId: number;
   icon?: React.ReactNode;
   isUnlocked: boolean;
+  mainAchievementId: number | undefined;
 }
 
 export const Achievement: React.FC<AchievementProps> = ({
   title,
   achievementId,
+  mainAchievementId,
   description,
   photoUrl,
   icon,
@@ -38,6 +40,7 @@ export const Achievement: React.FC<AchievementProps> = ({
 
       {isOpen && (
         <AchievementModal
+          mainAchievementId={mainAchievementId}
           title={title}
           achievementId={achievementId}
           description={description}

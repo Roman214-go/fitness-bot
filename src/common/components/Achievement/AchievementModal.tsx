@@ -11,11 +11,13 @@ interface Props {
   achievementId: number;
   onClose: () => void;
   isUnlocked: boolean;
+  mainAchievementId: number | undefined;
 }
 
 export const AchievementModal: React.FC<Props> = ({
   title,
   description,
+  mainAchievementId,
   photoUrl,
   isUnlocked,
   achievementId,
@@ -36,6 +38,7 @@ export const AchievementModal: React.FC<Props> = ({
       window.scrollTo(0, 0);
     }, 500);
   };
+  console.log(mainAchievementId);
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -44,7 +47,7 @@ export const AchievementModal: React.FC<Props> = ({
         <img src={photoUrl} />
         <p>{description}</p>
         <div className={styles.buttonContainer}>
-          {isUnlocked ? (
+          {isUnlocked && mainAchievementId !== achievementId ? (
             <Button buttonType='secondary' onClick={() => handleSetMain(achievementId)}>
               Отображать в профиле
             </Button>
