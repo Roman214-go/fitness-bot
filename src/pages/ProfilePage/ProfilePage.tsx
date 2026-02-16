@@ -194,6 +194,9 @@ export const ProfilePage: React.FC = () => {
         {isOpen && (
           <div className={styles.overlay} onClick={() => setIsOpen(false)}>
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
+              <button className={styles.closeButton} onClick={() => setIsOpen(false)}>
+                ✕
+              </button>
               <div
                 style={{
                   width: '100%',
