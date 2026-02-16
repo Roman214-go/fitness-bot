@@ -36,7 +36,6 @@
 .header {
   padding: 1rem;
 }
-
 .backButton {
   width: 40px;
   height: 40px;
@@ -44,18 +43,27 @@
   background: #e2f163;
   border: none;
   position: absolute;
-  top: 5%;
+  margin-left: 15px;
+  top: 20px;
   left: 2%;
   display: flex;
   padding-left: 13px;
   align-items: center;
   justify-content: center;
   color: #1a1a1a;
+  z-index: 10; // Поверх фото
 
   svg {
     width: 20px;
     height: 20px;
   }
+}
+
+.stickyWrapper {
+  position: sticky;
+  top: 90px;
+  z-index: 10;
+  height: 0;
 }
 
 .avatarSection {

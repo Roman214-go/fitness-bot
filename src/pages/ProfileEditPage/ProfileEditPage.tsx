@@ -270,9 +270,11 @@ const ProfileEditPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.avatar}>
-        <button className={styles.backButton} onClick={() => navigate(-1)}>
-          <MdArrowBackIos />
-        </button>
+        <div className={styles.stickyWrapper}>
+          <button className={styles.backButton} onClick={() => navigate(-1)}>
+            <MdArrowBackIos />
+          </button>
+        </div>
         <button className={styles.uploadAvatar} onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
           {isUploading ? '...' : <MdAddAPhoto />}
         </button>
