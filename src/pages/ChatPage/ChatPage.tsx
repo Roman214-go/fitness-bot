@@ -293,7 +293,7 @@ export const ChatPage: React.FC = () => {
   if (loading) {
     return (
       <div className={styles.chat_container}>
-        <div className={styles.header}>Чат</div>
+        <div className={styles.header}>Чат с тренером</div>
         <div className={styles.loading}>Загрузка пользователя...</div>
       </div>
     );
