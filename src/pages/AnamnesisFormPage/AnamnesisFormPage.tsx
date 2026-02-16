@@ -12,13 +12,18 @@ import { setUserData } from '../../common/auth/authSlice';
 export interface AnamnesisFormValues {
   has_varicose_veins: string;
   has_spinal_diseases: string;
+  spinal_diseases_description?: string;
   has_cns_diseases: string;
   has_cardiovascular_diseases: string;
+  cardiovascular_diseases_description?: string;
   has_respiratory_diseases: string;
+  respiratory_diseases_description?: string;
   has_diabetes: string;
   diabetes_type?: string;
   has_joint_diseases: string;
+  joint_diseases_description?: string;
   has_spinal_head_injuries: string;
+  spinal_head_injuries_description?: string;
   has_kidney_diseases: string;
   has_surgical_operations: string;
   surgical_operations_description?: string;
@@ -27,6 +32,7 @@ export interface AnamnesisFormValues {
   visual_impairment_degree?: string;
   has_thyroid_diseases: string;
   has_hormonal_disorders: string;
+  hormonal_disorders_description?: string;
   has_other_health_problems: string;
   other_health_problems_description?: string;
 }
@@ -34,16 +40,36 @@ export interface AnamnesisFormValues {
 const validationSchema = Yup.object().shape({
   has_varicose_veins: Yup.string().required('Выберите ответ'),
   has_spinal_diseases: Yup.string().required('Выберите ответ'),
+  spinal_diseases_description: Yup.string().when('has_spinal_diseases', {
+    is: 'yes',
+    then: schema => schema.required('Введите текст'),
+  }),
   has_cns_diseases: Yup.string().required('Выберите ответ'),
   has_cardiovascular_diseases: Yup.string().required('Выберите ответ'),
+  cardiovascular_diseases_description: Yup.string().when('has_cardiovascular_diseases', {
+    is: 'yes',
+    then: schema => schema.required('Введите текст'),
+  }),
   has_respiratory_diseases: Yup.string().required('Выберите ответ'),
+  respiratory_diseases_description: Yup.string().when('has_respiratory_diseases', {
+    is: 'yes',
+    then: schema => schema.required('Введите текст'),
+  }),
   has_diabetes: Yup.string().required('Выберите ответ'),
   diabetes_type: Yup.string().when('has_diabetes', {
     is: 'yes',
     then: schema => schema.required('Введите текст'),
   }),
   has_joint_diseases: Yup.string().required('Выберите ответ'),
+  joint_diseases_description: Yup.string().when('has_joint_diseases', {
+    is: 'yes',
+    then: schema => schema.required('Введите текст'),
+  }),
   has_spinal_head_injuries: Yup.string().required('Выберите ответ'),
+  spinal_head_injuries_description: Yup.string().when('has_spinal_head_injuries', {
+    is: 'yes',
+    then: schema => schema.required('Введите текст'),
+  }),
   has_kidney_diseases: Yup.string().required('Выберите ответ'),
   has_surgical_operations: Yup.string().required('Выберите ответ'),
   surgical_operations_description: Yup.string().when('has_surgical_operations', {
@@ -58,6 +84,10 @@ const validationSchema = Yup.object().shape({
   }),
   has_thyroid_diseases: Yup.string().required('Выберите ответ'),
   has_hormonal_disorders: Yup.string().required('Выберите ответ'),
+  hormonal_disorders_description: Yup.string().when('has_hormonal_disorders', {
+    is: 'yes',
+    then: schema => schema.required('Введите текст'),
+  }),
   has_other_health_problems: Yup.string().required('Выберите ответ'),
 });
 
@@ -70,13 +100,18 @@ export const AnamnesisFormPage: React.FC = () => {
   const initialValues: AnamnesisFormValues = {
     has_varicose_veins: '',
     has_spinal_diseases: '',
+    spinal_diseases_description: '',
     has_cns_diseases: '',
     has_cardiovascular_diseases: '',
+    cardiovascular_diseases_description: '',
     has_respiratory_diseases: '',
+    respiratory_diseases_description: '',
     has_diabetes: '',
     diabetes_type: '',
     has_joint_diseases: '',
+    joint_diseases_description: '',
     has_spinal_head_injuries: '',
+    spinal_head_injuries_description: '',
     has_kidney_diseases: '',
     has_surgical_operations: '',
     surgical_operations_description: '',
@@ -85,6 +120,7 @@ export const AnamnesisFormPage: React.FC = () => {
     visual_impairment_degree: '',
     has_thyroid_diseases: '',
     has_hormonal_disorders: '',
+    hormonal_disorders_description: '',
     has_other_health_problems: '',
     other_health_problems_description: '',
   };
@@ -152,6 +188,17 @@ export const AnamnesisFormPage: React.FC = () => {
                 </label>
               </div>
               <ErrorMessage name='has_spinal_diseases' component='div' className={styles.error} />
+              {values.has_spinal_diseases === 'yes' && (
+                <div className={styles.conditionalField}>
+                  <Field
+                    type='text'
+                    name='spinal_diseases_description'
+                    placeholder='Введите текст'
+                    className={`${styles.textInput} ${errors.spinal_diseases_description && touched.spinal_diseases_description ? styles.inputError : ''}`}
+                  />
+                  <ErrorMessage name='spinal_diseases_description' component='div' className={styles.error} />
+                </div>
+              )}
             </div>
 
             {/* 3. Заболевания центральной нервной системы */}
@@ -184,6 +231,17 @@ export const AnamnesisFormPage: React.FC = () => {
                 </label>
               </div>
               <ErrorMessage name='has_cardiovascular_diseases' component='div' className={styles.error} />
+              {values.has_cardiovascular_diseases === 'yes' && (
+                <div className={styles.conditionalField}>
+                  <Field
+                    type='text'
+                    name='cardiovascular_diseases_description'
+                    placeholder='Введите текст'
+                    className={`${styles.textInput} ${errors.cardiovascular_diseases_description && touched.cardiovascular_diseases_description ? styles.inputError : ''}`}
+                  />
+                  <ErrorMessage name='cardiovascular_diseases_description' component='div' className={styles.error} />
+                </div>
+              )}
             </div>
 
             {/* 5. Заболевания респираторной системы */}
@@ -200,6 +258,17 @@ export const AnamnesisFormPage: React.FC = () => {
                 </label>
               </div>
               <ErrorMessage name='has_respiratory_diseases' component='div' className={styles.error} />
+              {values.has_respiratory_diseases === 'yes' && (
+                <div className={styles.conditionalField}>
+                  <Field
+                    type='text'
+                    name='respiratory_diseases_description'
+                    placeholder='Введите текст'
+                    className={`${styles.textInput} ${errors.respiratory_diseases_description && touched.respiratory_diseases_description ? styles.inputError : ''}`}
+                  />
+                  <ErrorMessage name='respiratory_diseases_description' component='div' className={styles.error} />
+                </div>
+              )}
             </div>
 
             {/* 6. Диабет (тип) */}
@@ -215,7 +284,6 @@ export const AnamnesisFormPage: React.FC = () => {
                   <span>Нет</span>
                 </label>
               </div>
-
               <ErrorMessage name='has_diabetes' component='div' className={styles.error} />
               {values.has_diabetes === 'yes' && (
                 <div className={styles.conditionalField}>
@@ -225,7 +293,7 @@ export const AnamnesisFormPage: React.FC = () => {
                     placeholder='Введите текст'
                     className={`${styles.textInput} ${errors.diabetes_type && touched.diabetes_type ? styles.inputError : ''}`}
                   />
-                  <ErrorMessage name='has_diabetes' component='div' className={styles.error} />
+                  <ErrorMessage name='diabetes_type' component='div' className={styles.error} />
                 </div>
               )}
             </div>
@@ -244,6 +312,17 @@ export const AnamnesisFormPage: React.FC = () => {
                 </label>
               </div>
               <ErrorMessage name='has_joint_diseases' component='div' className={styles.error} />
+              {values.has_joint_diseases === 'yes' && (
+                <div className={styles.conditionalField}>
+                  <Field
+                    type='text'
+                    name='joint_diseases_description'
+                    placeholder='Введите текст'
+                    className={`${styles.textInput} ${errors.joint_diseases_description && touched.joint_diseases_description ? styles.inputError : ''}`}
+                  />
+                  <ErrorMessage name='joint_diseases_description' component='div' className={styles.error} />
+                </div>
+              )}
             </div>
 
             {/* 8. Травмы позвоночника и черепно-мозговые травмы */}
@@ -260,6 +339,17 @@ export const AnamnesisFormPage: React.FC = () => {
                 </label>
               </div>
               <ErrorMessage name='has_spinal_head_injuries' component='div' className={styles.error} />
+              {values.has_spinal_head_injuries === 'yes' && (
+                <div className={styles.conditionalField}>
+                  <Field
+                    type='text'
+                    name='spinal_head_injuries_description'
+                    placeholder='Введите текст'
+                    className={`${styles.textInput} ${errors.spinal_head_injuries_description && touched.spinal_head_injuries_description ? styles.inputError : ''}`}
+                  />
+                  <ErrorMessage name='spinal_head_injuries_description' component='div' className={styles.error} />
+                </div>
+              )}
             </div>
 
             {/* 9. Заболевания почек */}
@@ -318,6 +408,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <span>Нет</span>
                 </label>
               </div>
+              <ErrorMessage name='has_muscle_injuries' component='div' className={styles.error} />
             </div>
 
             {/* 12. Нарушения зрения (степень) */}
@@ -377,6 +468,17 @@ export const AnamnesisFormPage: React.FC = () => {
                 </label>
               </div>
               <ErrorMessage name='has_hormonal_disorders' component='div' className={styles.error} />
+              {values.has_hormonal_disorders === 'yes' && (
+                <div className={styles.conditionalField}>
+                  <Field
+                    type='text'
+                    name='hormonal_disorders_description'
+                    placeholder='Введите текст'
+                    className={`${styles.textInput} ${errors.hormonal_disorders_description && touched.hormonal_disorders_description ? styles.inputError : ''}`}
+                  />
+                  <ErrorMessage name='hormonal_disorders_description' component='div' className={styles.error} />
+                </div>
+              )}
             </div>
 
             {/* 15. Другие отклонения здоровья */}

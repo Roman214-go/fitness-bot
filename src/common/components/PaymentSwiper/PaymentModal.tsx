@@ -94,13 +94,20 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
       ).unwrap();
 
       if (result.success && result.payment_url) {
-        window.open(result.payment_url, '_blank');
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        !userData.anthropometric_data
-          ? navigate('/main-form')
-          : !userData.medical_history
-            ? navigate('/anamnesis-form')
-            : navigate('/');
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.openLink(result.payment_url);
+        } else {
+          window.location.href = result.payment_url;
+        }
+
+        setTimeout(() => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+          !userData.anthropometric_data
+            ? navigate('/main-form')
+            : !userData.medical_history
+              ? navigate('/anamnesis-form')
+              : navigate('/');
+        }, 1000);
       } else {
         toast.error('Ошибка при создании платежа');
       }
