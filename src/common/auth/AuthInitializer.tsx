@@ -6,6 +6,7 @@ import { setAuthData, setUserData } from './authSlice';
 import { axiosInstance } from '../utils/axiosInstance';
 import Loader from '../components/Loader';
 import { ErrorScreen } from '../../pages/ErrorScreen/ErrorScreen';
+import { process } from '../constants/process';
 
 export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuthLoaded }) => {
   const [verifyAuth] = useVerifyAuthMutation();
@@ -43,6 +44,12 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
 
         dispatch(setUserData(userData));
 
+        await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/my`, {
+          headers: {
+            'X-Telegram-Auth': JSON.stringify({ telegram_id: userData?.telegram_id }),
+          },
+        });
+
         setLoading(false);
         onAuthLoaded();
       } catch (err: any) {
@@ -52,7 +59,7 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
     };
 
     initAuth();
-  }, [verifyAuth, dispatch]);
+  }, []);
 
   if (error) {
     return <ErrorScreen message={error} />;
