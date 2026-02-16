@@ -44,11 +44,15 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
 
         dispatch(setUserData(userData));
 
-        await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/my`, {
-          headers: {
-            'X-Telegram-Auth': JSON.stringify({ telegram_id: userData?.telegram_id }),
-          },
-        });
+        try {
+          await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/my`, {
+            headers: {
+              'X-Telegram-Auth': JSON.stringify({ telegram_id: userData?.telegram_id }),
+            },
+          });
+        } catch {
+          //
+        }
 
         setLoading(false);
         onAuthLoaded();
@@ -59,6 +63,7 @@ export const AuthInitializer: React.FC<{ onAuthLoaded: () => void }> = ({ onAuth
     };
 
     initAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (error) {
