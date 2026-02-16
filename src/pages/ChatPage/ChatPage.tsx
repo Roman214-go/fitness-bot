@@ -301,7 +301,7 @@ export const ChatPage: React.FC = () => {
 
   return (
     <div className={styles.chat_container}>
-      <div className={styles.header}>Чат</div>
+      <div className={styles.header}>Чат с тренером</div>
 
       <div className={styles.messages_container}>
         {messages.map(msg => (
