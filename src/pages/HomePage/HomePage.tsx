@@ -91,9 +91,7 @@ const HomePage = () => {
             </div>
           </>
         ) : null}
-        {!userData?.has_workout_plan &&
-        checkSubscriptionStatus(userData?.subscription) &&
-        userData?.fitness_goals.workout_format === 'home' ? (
+        {checkSubscriptionStatus(userData?.subscription) && userData?.fitness_goals.workout_format === 'home' ? (
           <Button buttonType='secondary' onClick={() => setIsEquipmentOpen(true)}>
             Необходимый инвентарь для тренировок
           </Button>
