@@ -102,12 +102,12 @@ export const PaymentSwiper = () => {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0', marginBottom: '40px' }}>
         <svg
           id='Layer_1'
           data-name='Layer 1'
           xmlns='http://www.w3.org/2000/svg'
-          width={'200px'}
+          width={'250px'}
           viewBox='0 0 792.97 374.608'
         >
           <path
@@ -156,7 +156,7 @@ export const PaymentSwiper = () => {
                   ) : null}
 
                   <p className={styles.price}>
-                    {price.final_price} {currency === 'BYN' ? 'BYN' : 'РУБ'}
+                    {price.final_price} {currency === 'BYN' ? 'BYN' : '₽'}
                   </p>
                 </div>
                 <p style={{ textAlign: 'start' }}>Длительность: {plan.subscription_type} дней</p>

@@ -211,7 +211,7 @@ export const ProfilePage: React.FC = () => {
                 {speechesForUser.length > 1 && <FaChevronRight onClick={handleNext} style={{ cursor: 'pointer' }} />}
               </div>
 
-              <p>{currentSpeechs?.text}</p>
+              <p style={{ fontSize: '14px' }}>{currentSpeechs?.text}</p>
             </div>
           </div>
         )}

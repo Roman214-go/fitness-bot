@@ -98,7 +98,7 @@
 
 .rank {
   font-size: 16px;
-  color: #888;
+  font-weight: bold;
   text-align: center;
   min-width: 50px;
 }
@@ -118,7 +118,7 @@
 
 .score {
   font-size: 14px;
-  color: #888;
+  font-weight: bold;
 }
 
 .table_header {
@@ -128,5 +128,87 @@
     padding: 10px;
     font-size: 16px;
     color: #999999;
+  }
+}
+
+// Color classes for positions
+.goldRank {
+  color: #d4af37;
+}
+
+.silverRank {
+  color: #c0c0c0;
+}
+
+.bronzeRank {
+  color: #cd7f32;
+}
+
+.turquoiseRank {
+  color: #40e0d0;
+}
+
+.greenRank {
+  color: #32cd32;
+}
+
+.purpleRank {
+  color: #9370db;
+}
+
+// Separator bars
+.separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  margin: 15px 0;
+  position: relative;
+
+  span {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0 15px;
+    background-color: #1a1a1a;
+    z-index: 0;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 0;
+  }
+}
+
+.turquoiseSeparator {
+  span {
+    color: #40e0d0;
+  }
+
+  &::before {
+    background-color: #40e0d0;
+  }
+}
+
+.greenSeparator {
+  span {
+    color: #32cd32;
+  }
+
+  &::before {
+    background-color: #32cd32;
+  }
+}
+
+.purpleSeparator {
+  span {
+    color: #9370db;
+  }
+
+  &::before {
+    background-color: #9370db;
   }
 }

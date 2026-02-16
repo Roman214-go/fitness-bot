@@ -501,7 +501,32 @@ export const MainFormPage = () => {
             <div
               className={`${styles.formSection} ${errors.daily_steps_level && touched.daily_steps_level ? styles.hasError : ''}`}
             >
-              <label className={styles.formLabel}>Двигательная активность</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <label className={styles.formLabel}>Двигательная активность </label>
+                <span
+                  className={styles.tooltipIcon}
+                  data-tooltip-content='перейдите в приложении "здоровья" на вашем устройстве для айфона или другое приложение и посмотрите среднее значение шагов за месяц '
+                  data-tooltip-id='movement-tooltip'
+                  data-tooltip-trigger='click'
+                >
+                  ?
+                </span>
+                <Tooltip
+                  id='movement-tooltip'
+                  className={styles.tooltip}
+                  place='top'
+                  offset={8}
+                  positionStrategy='absolute'
+                  clickable={true}
+                  events={['click']}
+                  globalCloseEvents={{
+                    escape: true,
+                    scroll: true,
+                    resize: true,
+                    clickOutsideAnchor: true,
+                  }}
+                />
+              </div>
 
               <div className={styles.radioGroup}>
                 <label className={styles.radioLabel}>

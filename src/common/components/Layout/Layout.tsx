@@ -42,7 +42,7 @@ export const Layout = () => {
 
         <NavLink to='/chat' className={({ isActive }) => (isActive ? styles.active : '')}>
           <IoChatbubblesOutline />
-          <span className={styles.label}>Чат</span>
+          <span className={styles.label}>Чат с тренером</span>
         </NavLink>
 
         <NavLink to='/profile' className={({ isActive }) => (isActive ? styles.active : '')}>

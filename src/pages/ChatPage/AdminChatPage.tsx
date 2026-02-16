@@ -122,7 +122,7 @@ export const AdminChatPage: React.FC = () => {
           return {
             id: String(m.id),
             text: m.content ?? undefined,
-            image: m.photo_url ? `${process.env.REACT_APP_BASE_EMPTY_URL}${m.photo_url}` : undefined,
+            image: m.photo_url ? `${process.env.REACT_APP_BASE_EMPTY_URL}/static/${m.photo_url}` : undefined,
             sender: isOwn ? 'user' : 'other',
             timestamp: new Date(m.created_at),
             status: 'read',

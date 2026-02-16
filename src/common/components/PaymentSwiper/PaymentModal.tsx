@@ -149,11 +149,17 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
                   {({ field, form }: FieldProps) => (
                     <input
                       value={field.value}
-                      onChange={e => form.setFieldValue('cardNumber', e.target.value)}
+                      onChange={e => {
+                        const value = e.target.value.replace(/\s/g, '');
+                        const digits = value.replace(/\D/g, '');
+                        const formatted = digits.match(/.{1,4}/g)?.join(' ') || '';
+                        form.setFieldValue('cardNumber', formatted);
+                      }}
                       onBlur={field.onBlur}
                       name={field.name}
-                      type='number'
-                      placeholder='Номер карты'
+                      type='text'
+                      placeholder='1111 1111 1111 1111'
+                      maxLength={19}
                       className={`${styles.input} ${form.touched.cardNumber && form.errors.cardNumber ? styles.error : ''}`}
                     />
                   )}

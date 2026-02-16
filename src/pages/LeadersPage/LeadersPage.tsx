@@ -42,8 +42,6 @@ export const LeadersPage: React.FC = () => {
       return order.indexOf(a.position) - order.indexOf(b.position);
     });
 
-  const otherUsers = users.filter(user => user.position > 3);
-
   const getPlaceClass = (place: number) => {
     switch (place) {
       case 1:
@@ -66,6 +64,16 @@ export const LeadersPage: React.FC = () => {
       default:
         return styles.badge;
     }
+  };
+
+  const getRankColorClass = (position: number) => {
+    if (position === 1) return styles.goldRank;
+    if (position === 2) return styles.silverRank;
+    if (position === 3) return styles.bronzeRank;
+    if (position >= 4 && position <= 5) return styles.turquoiseRank;
+    if (position >= 6 && position <= 10) return styles.greenRank;
+    if (position >= 11 && position <= 20) return styles.purpleRank;
+    return '';
   };
 
   if (isLoading) {
@@ -102,27 +110,51 @@ export const LeadersPage: React.FC = () => {
           <span>Очки</span>
         </div>
 
-        {otherUsers.map(user => {
+        {users.map((user, index) => {
           const isCurrentUser = user.user_id === userData?.id;
+          const nextUser = index < users.length - 1 ? users[index + 1] : null;
+
+          // Show separator after specific positions (after 5th, 10th, and 20th place)
+          const showTop5 = user.position === 5 && (!nextUser || nextUser.position > 5);
+          const showTop10 = user.position === 10 && (!nextUser || nextUser.position > 10);
+          const showTop20 = user.position === 20 && (!nextUser || nextUser.position > 20);
 
           return (
-            <div key={user.user_id} className={`${styles.listItem} ${isCurrentUser ? styles.currentUser : ''}`}>
-              <span className={styles.rank}>{user.position}</span>
+            <React.Fragment key={user.user_id}>
+              <div className={`${styles.listItem} ${isCurrentUser ? styles.currentUser : ''}`}>
+                <span className={`${styles.rank} ${getRankColorClass(user.position)}`}>{user.position}</span>
 
-              {user.photo_url ? (
-                <img
-                  src={`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${user?.photo_url}`}
-                  alt={user.username ?? 'user'}
-                  className={styles.listAvatar}
-                />
-              ) : (
-                <div className={styles.listAvatar} />
+                {user.photo_url ? (
+                  <img
+                    src={`${process.env.REACT_APP_BASE_EMPTY_URL}/static/${user?.photo_url}`}
+                    alt={user.username ?? 'user'}
+                    className={styles.listAvatar}
+                  />
+                ) : (
+                  <div className={styles.listAvatar} />
+                )}
+
+                <span className={styles.nickname}>{isCurrentUser ? 'Вы' : user.username || 'Без имени'}</span>
+
+                <span className={`${styles.score} ${getRankColorClass(user.position)}`}>{user.total_points}</span>
+              </div>
+
+              {showTop5 && (
+                <div className={`${styles.separator} ${styles.turquoiseSeparator}`}>
+                  <span>ТОП 5</span>
+                </div>
               )}
-
-              <span className={styles.nickname}>{isCurrentUser ? 'Вы' : user.username || 'Без имени'}</span>
-
-              <span className={styles.score}>{user.total_points}</span>
-            </div>
+              {showTop10 && (
+                <div className={`${styles.separator} ${styles.greenSeparator}`}>
+                  <span>ТОП 10</span>
+                </div>
+              )}
+              {showTop20 && (
+                <div className={`${styles.separator} ${styles.purpleSeparator}`}>
+                  <span>ТОП 20</span>
+                </div>
+              )}
+            </React.Fragment>
           );
         })}
       </div>
