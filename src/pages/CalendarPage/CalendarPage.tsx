@@ -52,12 +52,13 @@ export const CalendarPage: React.FC = () => {
 
   const mapBackendStatus = (d: WorkoutDate): WorkoutStatus => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const workoutDate = new Date(d.scheduled_date);
+    workoutDate.setHours(0, 0, 0, 0);
 
     if (d.status === 'completed') return 'completed';
-
     if (d.is_recommended) return 'recommended';
-
     if (workoutDate < today && d.completed_at === null) return 'not_completed';
 
     return 'planned';
