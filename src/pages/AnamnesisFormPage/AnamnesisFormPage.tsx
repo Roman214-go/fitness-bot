@@ -42,7 +42,7 @@ const validationSchema = Yup.object().shape({
   has_spinal_diseases: Yup.string().required('Выберите ответ'),
   spinal_diseases_description: Yup.string().when('has_spinal_diseases', {
     is: 'yes',
-    then: schema => schema.required('Введите текст'),
+    then: schema => schema.required('Подробнее'),
   }),
   has_cns_diseases: Yup.string().required('Выберите ответ'),
   has_cardiovascular_diseases: Yup.string().required('Выберите ответ'),
@@ -193,7 +193,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='spinal_diseases_description'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.spinal_diseases_description && touched.spinal_diseases_description ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='spinal_diseases_description' component='div' className={styles.error} />
@@ -236,7 +236,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='cardiovascular_diseases_description'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.cardiovascular_diseases_description && touched.cardiovascular_diseases_description ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='cardiovascular_diseases_description' component='div' className={styles.error} />
@@ -263,7 +263,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='respiratory_diseases_description'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.respiratory_diseases_description && touched.respiratory_diseases_description ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='respiratory_diseases_description' component='div' className={styles.error} />
@@ -290,7 +290,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='diabetes_type'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.diabetes_type && touched.diabetes_type ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='diabetes_type' component='div' className={styles.error} />
@@ -317,7 +317,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='joint_diseases_description'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.joint_diseases_description && touched.joint_diseases_description ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='joint_diseases_description' component='div' className={styles.error} />
@@ -344,7 +344,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='spinal_head_injuries_description'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.spinal_head_injuries_description && touched.spinal_head_injuries_description ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='spinal_head_injuries_description' component='div' className={styles.error} />
@@ -387,7 +387,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='surgical_operations_description'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.surgical_operations_description && touched.surgical_operations_description ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='surgical_operations_description' component='div' className={styles.error} />
@@ -430,7 +430,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='visual_impairment_degree'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.visual_impairment_degree && touched.visual_impairment_degree ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='visual_impairment_degree' component='div' className={styles.error} />
@@ -473,7 +473,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='hormonal_disorders_description'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.hormonal_disorders_description && touched.hormonal_disorders_description ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='hormonal_disorders_description' component='div' className={styles.error} />
@@ -500,7 +500,7 @@ export const AnamnesisFormPage: React.FC = () => {
                   <Field
                     type='text'
                     name='other_health_problems_description'
-                    placeholder='Введите текст'
+                    placeholder='Подробнее'
                     className={`${styles.textInput} ${errors.other_health_problems_description && touched.other_health_problems_description ? styles.inputError : ''}`}
                   />
                   <ErrorMessage name='other_health_problems_description' component='div' className={styles.error} />
