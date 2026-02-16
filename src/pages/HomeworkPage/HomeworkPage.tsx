@@ -265,7 +265,7 @@ export const HomeworkPage: React.FC = () => {
         </div>
       </div>
 
-      <ToastContainer theme='light' hideProgressBar autoClose={3000} style={{ position: 'absolute' }} />
+      <ToastContainer theme='light' hideProgressBar autoClose={3000} style={{ marginTop: '90px' }} />
     </div>
   );
 };

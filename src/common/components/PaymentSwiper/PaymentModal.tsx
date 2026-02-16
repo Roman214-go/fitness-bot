@@ -226,7 +226,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ plan, currency, onCl
           )}
         </Formik>
 
-        <ToastContainer theme='light' hideProgressBar autoClose={3000} />
+        <ToastContainer style={{ marginTop: '90px' }} theme='light' hideProgressBar autoClose={3000} />
       </div>
     </div>
   );
