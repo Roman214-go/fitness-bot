@@ -144,11 +144,11 @@ export const CalendarPage: React.FC = () => {
     const isAllowed =
       workoutDate <= endOfWeek && (day.status === 'planned' || day.status === 'recommended' || day.status === 'last');
 
-    // if (isAllowed) {
-    navigate(`/training/${day.fullDate}`);
-    // } else if (day.status === 'planned' || day.status === 'recommended') {
-    //   toast.info('Эта тренировка будет доступна на следующей неделе');
-    // }
+    if (isAllowed) {
+      navigate(`/training/${day.fullDate}`);
+    } else if (day.status === 'planned' || day.status === 'recommended') {
+      toast.info('Эта тренировка будет доступна на следующей неделе');
+    }
   };
 
   const goToPreviousMonth = () => {

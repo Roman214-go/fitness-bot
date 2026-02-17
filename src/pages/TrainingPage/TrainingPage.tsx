@@ -48,7 +48,7 @@ export const TrainingPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (data?.workout && !data.workout.is_cycle_completed) {
+    if (data?.workout && data.workout.is_cycle_completed) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       showNotification();
     }
