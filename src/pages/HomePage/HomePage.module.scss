@@ -2,10 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: 40px;
-
-  margin-top: 10px;
+  background: linear-gradient(180deg, #672dca 0%, #1e1e1e 20%);
   padding: 5%;
-  padding-top: 90px;
+  padding-top: 100px;
   color: white;
   &_trainee {
     display: flex;

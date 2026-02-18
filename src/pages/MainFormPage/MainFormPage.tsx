@@ -505,7 +505,7 @@ export const MainFormPage = () => {
                 <label className={styles.formLabel}>Двигательная активность </label>
                 <span
                   className={styles.tooltipIcon}
-                  data-tooltip-content='перейдите в приложении "здоровьe" на вашем устройстве для айфона или другое приложение и посмотрите среднее значение шагов за месяц '
+                  data-tooltip-content='Перейдите в приложении "здоровьe" на вашем устройстве для айфона или другое приложение и посмотрите среднее значение шагов за месяц '
                   data-tooltip-id='movement-tooltip'
                   data-tooltip-trigger='click'
                 >

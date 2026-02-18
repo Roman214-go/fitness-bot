@@ -269,7 +269,7 @@ export const CalendarPage: React.FC = () => {
           <div className='legend-icon legend-icon--last'>
             <Dumbbell size={16} />
           </div>
-          <span>Последняя тренировка в подписке</span>
+          <span>Последняя тренировка в программе</span>
         </div>
         <div className='legend-item'>
           <div className='legend-icon legend-icon--rest'></div>
@@ -283,7 +283,7 @@ export const CalendarPage: React.FC = () => {
         .workout-calendar {
           color: #ffffff;
           padding: 20px;
-          padding-top: 90px;
+          padding-top: 100px;
           border-radius: 16px;
           margin: 0 auto;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
