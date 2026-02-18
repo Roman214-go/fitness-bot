@@ -3,6 +3,7 @@ import { BsX } from 'react-icons/bs';
 import styles from './ChatPage.module.scss';
 import { useAppSelector } from '../../common/store/hooks';
 import { process } from '../../common/constants/process';
+import heic2any from 'heic2any';
 
 interface Message {
   id: string;
@@ -22,6 +23,109 @@ interface Chat {
   last_message_at?: string;
   unread_count?: number;
 }
+
+const convertToJpeg = (file: File): Promise<File> => {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          if (!ctx) {
+            // Если canvas не работает, возвращаем оригинальный файл
+            resolve(file);
+            return;
+          }
+
+          // Ограничиваем максимальный размер изображения (меньше для уменьшения размера файла)
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+
+          let width = img.width;
+          let height = img.height;
+
+          // Масштабируем если слишком большое
+          if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+            const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+            width = Math.floor(width * ratio);
+            height = Math.floor(height * ratio);
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Рисуем изображение
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Конвертируем canvas в blob с более низким качеством
+          canvas.toBlob(
+            blob => {
+              if (blob) {
+                // Проверяем размер файла
+                const maxSize = 2 * 1024 * 1024; // 2MB
+
+                if (blob.size > maxSize) {
+                  // Если файл все еще большой, пробуем еще больше сжать
+                  canvas.toBlob(
+                    secondBlob => {
+                      if (secondBlob) {
+                        const newFile = new File([secondBlob], 'photo.jpg', {
+                          type: 'image/jpeg',
+                          lastModified: Date.now(),
+                        });
+                        resolve(newFile);
+                      } else {
+                        resolve(file);
+                      }
+                    },
+                    'image/jpeg',
+                    0.6, // Еще меньше качество
+                  );
+                } else {
+                  const newFile = new File([blob], 'photo.jpg', {
+                    type: 'image/jpeg',
+                    lastModified: Date.now(),
+                  });
+                  resolve(newFile);
+                }
+              } else {
+                // Если не удалось создать blob, возвращаем оригинал
+                resolve(file);
+              }
+            },
+            'image/jpeg',
+            0.75, // Снижаем качество для уменьшения размера
+          );
+        } catch (error) {
+          // При любой ошибке возвращаем оригинальный файл
+          console.warn('Canvas processing failed, using original file:', error);
+          resolve(file);
+        }
+      };
+
+      img.onerror = () => {
+        // Если изображение не загрузилось, возвращаем оригинал
+        console.warn('Image loading failed, using original file');
+        resolve(file);
+      };
+
+      img.src = e.target?.result as string;
+    };
+
+    reader.onerror = () => {
+      // Если FileReader не сработал, возвращаем оригинал
+      console.warn('FileReader failed, using original file');
+      resolve(file);
+    };
+
+    reader.readAsDataURL(file);
+  });
+};
 
 export const AdminChatPage: React.FC = () => {
   const { userData } = useAppSelector(state => state.auth);
@@ -292,17 +396,40 @@ export const AdminChatPage: React.FC = () => {
      Загрузка и отправка изображения
   ======================= */
   const handleAddImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file || !chatId) return;
 
-    const imageUrl = URL.createObjectURL(file);
+    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+      try {
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.7, // Снижаем качество для уменьшения размера
+        });
+
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        file = new File([blob], 'photo.jpg', {
+          type: 'image/jpeg',
+          lastModified: Date.now(),
+        });
+      } catch (heicError) {
+        console.warn('HEIC conversion failed:', heicError);
+        // Продолжаем с оригинальным файлом
+      }
+    }
+
+    // Конвертация/оптимизация изображения
+    const processedFile = await convertToJpeg(file);
+
+    // Создаем preview URL для отображения
+    const previewUrl = URL.createObjectURL(processedFile);
     const tempId = Date.now().toString();
 
     setMessages(prev => [
       ...prev,
       {
         id: tempId,
-        image: imageUrl,
+        image: previewUrl,
         sender: 'user',
         timestamp: new Date(),
         status: 'sent',
