@@ -20,11 +20,15 @@
     gap: 40px;
   }
   &_subscription {
-    margin: 45px 15px 0;
+    padding: 45px 15px 0;
     font-size: 18px;
     font-weight: 600;
     text-align: center;
   }
+}
+
+.wrapperLast {
+  background: linear-gradient(180deg, #672dca 0%, #1e1e1e 25%);
 }
 
 .slide {
