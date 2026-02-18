@@ -345,13 +345,8 @@ export const ChatPage: React.FC = () => {
         // Продолжаем с оригинальным файлом
       }
     }
-
-    // Конвертация/оптимизация изображения
     const processedFile = await convertToJpeg(file);
-
-    // Создаем preview URL для отображения
     const previewUrl = URL.createObjectURL(processedFile);
-
     const tempId = Date.now().toString();
 
     setMessages(prev => [
@@ -367,7 +362,7 @@ export const ChatPage: React.FC = () => {
 
     try {
       const formData = new FormData();
-      formData.append('photo', file);
+      formData.append('photo', processedFile, processedFile.name);
       formData.append('content', '');
 
       const res = await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/${chatId}/send/photo`, {
@@ -486,15 +481,17 @@ export const ChatPage: React.FC = () => {
       {/* Модальное окно для просмотра фото */}
       {fullscreenImage && (
         <div className={styles.fullscreen_overlay} onClick={closeFullscreenImage}>
-          <button className={styles.close_button} onClick={closeFullscreenImage}>
-            <BsX size={32} />
-          </button>
-          <img
-            src={fullscreenImage}
-            alt='fullscreen'
-            className={styles.fullscreen_image}
-            onClick={e => e.stopPropagation()}
-          />
+          <div className={styles.imageModal}>
+            <img
+              src={fullscreenImage}
+              alt='fullscreen'
+              className={styles.fullscreen_image}
+              onClick={e => e.stopPropagation()}
+            />
+            <button className={styles.close_button} onClick={closeFullscreenImage}>
+              <BsX size={32} />
+            </button>
+          </div>
         </div>
       )}
     </div>

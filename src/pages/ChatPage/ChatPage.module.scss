@@ -195,6 +195,13 @@
   animation: fadeIn 0.2s ease-in-out;
 }
 
+.imageModal {
+  position: relative;
+  display: inline-flex;
+  cursor: default;
+  animation: scaleIn 0.2s ease-in-out;
+}
+
 .fullscreen_image {
   max-width: 80vw;
   max-height: 80vh;
@@ -205,13 +212,13 @@
 
 .close_button {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: -16px;
+  right: -16px;
   background: rgba(255, 255, 255, 0.1);
   border: none;
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
