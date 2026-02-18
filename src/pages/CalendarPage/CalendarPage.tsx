@@ -269,7 +269,7 @@ export const CalendarPage: React.FC = () => {
           <div className='legend-icon legend-icon--last'>
             <Dumbbell size={16} />
           </div>
-          <span>Последняя тренировка</span>
+          <span>Последняя тренировка в подписке</span>
         </div>
         <div className='legend-item'>
           <div className='legend-icon legend-icon--rest'></div>

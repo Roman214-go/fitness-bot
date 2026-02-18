@@ -1,5 +1,6 @@
 .container {
   color: #fff;
+  background: linear-gradient(180deg, #672dca 0%, #1a1a1a 10%);
   padding-top: 90px;
 }
 
@@ -169,7 +170,7 @@
     font-size: 14px;
     font-weight: bold;
     padding: 0 15px;
-    background-color: #1a1a1a;
+    background-color: inherit;
     z-index: 0;
   }
 
@@ -185,6 +186,8 @@
 
 .turquoiseSeparator {
   span {
+    background-color: inherit;
+    padding: 0 17px;
     color: #40e0d0;
   }
 
@@ -195,6 +198,7 @@
 
 .greenSeparator {
   span {
+    background-color: inherit;
     color: #32cd32;
   }
 
@@ -205,6 +209,7 @@
 
 .purpleSeparator {
   span {
+    background-color: inherit;
     color: #9370db;
   }
 

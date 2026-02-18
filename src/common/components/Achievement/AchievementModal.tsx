@@ -38,7 +38,6 @@ export const AchievementModal: React.FC<Props> = ({
       window.scrollTo(0, 0);
     }, 500);
   };
-  console.log(mainAchievementId);
 
   return (
     <div className={styles.overlay} onClick={onClose}>

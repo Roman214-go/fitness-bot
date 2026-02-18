@@ -84,7 +84,7 @@ const HomePage = () => {
       <div className={styles.container_trainee}>
         {userData?.has_workout_plan ? (
           <>
-            <h2>Начни свою тренировку</h2>
+            <h2 style={{ textAlign: 'center' }}>Начни свою тренировку</h2>
             <div className={styles.trainee} onClick={handleStartUpcomingWorkout}>
               <h2>Упражнений: {totalExercises}</h2>
               <p>Ближайшая тренировка: {formattedDate}</p>

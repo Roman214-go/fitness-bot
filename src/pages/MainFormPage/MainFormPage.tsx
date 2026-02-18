@@ -424,7 +424,7 @@ export const MainFormPage = () => {
               <div className={styles.radioGroup}>
                 <label className={styles.radioLabel}>
                   <Field type='checkbox' name='healthy_goal' value={'posture_correction'} />
-                  <span>Исправление осанки</span>
+                  <span>Улучшение осанки</span>
                 </label>
                 <label className={styles.radioLabel}>
                   <Field type='checkbox' name='healthy_goal' value={'back_pain_relief'} />
@@ -505,7 +505,7 @@ export const MainFormPage = () => {
                 <label className={styles.formLabel}>Двигательная активность </label>
                 <span
                   className={styles.tooltipIcon}
-                  data-tooltip-content='перейдите в приложении "здоровья" на вашем устройстве для айфона или другое приложение и посмотрите среднее значение шагов за месяц '
+                  data-tooltip-content='перейдите в приложении "здоровьe" на вашем устройстве для айфона или другое приложение и посмотрите среднее значение шагов за месяц '
                   data-tooltip-id='movement-tooltip'
                   data-tooltip-trigger='click'
                 >

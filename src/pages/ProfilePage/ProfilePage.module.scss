@@ -30,8 +30,8 @@
 }
 
 .avatarCircle {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   background: #666;
   border: 3px solid white;
@@ -39,8 +39,8 @@
 
 .avatarImage {
   border: 3px solid white;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
 }
 
@@ -229,8 +229,7 @@
   display: flex;
   top: 10vh;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  // align-items: center;
   background: #1e1e1e;
   border-radius: 20px;
   width: 80%;
@@ -238,11 +237,12 @@
   text-align: center;
   color: white;
   gap: 15px;
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 24px;
   p {
     text-align: start;
-    overflow-y: auto;
+    // overflow-y: auto;
     line-height: 1.3;
   }
   scrollbar-width: thin;

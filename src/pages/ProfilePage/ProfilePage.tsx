@@ -180,7 +180,9 @@ export const ProfilePage: React.FC = () => {
               <p>Срок подписки</p>
             </div>
             <p style={{ color: '#E2F163' }}>
-              {userData?.subscription?.end_date ? dayjs(userData.subscription.end_date).format('DD.MM.YYYY') : '—'}
+              {userData?.subscription?.end_date
+                ? `до ${dayjs(userData.subscription.end_date).format('DD.MM.YYYY')}`
+                : '—'}
             </p>
           </div>
           <div className={styles.trainee}>
@@ -210,8 +212,15 @@ export const ProfilePage: React.FC = () => {
                 <h2>Прогноз по {currentSpeechs?.title}</h2>
                 {speechesForUser.length > 1 && <FaChevronRight onClick={handleNext} style={{ cursor: 'pointer' }} />}
               </div>
-
-              <p style={{ fontSize: '14px' }}>{currentSpeechs?.text}</p>
+              {currentSpeechs?.text.split('\n').map((line, index) =>
+                line.trim() === '' ? (
+                  <br key={index} />
+                ) : (
+                  <p key={index} style={{ fontSize: '14px', marginBottom: '4px' }}>
+                    {line}
+                  </p>
+                ),
+              )}
             </div>
           </div>
         )}
@@ -227,7 +236,7 @@ export const ProfilePage: React.FC = () => {
 
         {checkSubscriptionStatus(userData?.subscription) ? (
           <>
-            <h2 className={styles.achievements_title}>Доступные достижения</h2>
+            <h2 className={styles.achievements_title}>Награды</h2>
 
             {achievementsLoading ? (
               <div className={styles.achievementsLoading}>Загрузка достижений...</div>
