@@ -173,8 +173,9 @@ export const WorkoutPage: React.FC = () => {
       }
 
       // Проверяем, завершен ли сет
+      // Считаем количество выполненных подходов ДО nextRound (не включая его)
       let completedCount = 0;
-      for (let i = 0; i <= nextRound; i++) {
+      for (let i = 0; i < nextRound; i++) {
         const exIndex = i % exercisesCount;
         const round = Math.floor(i / exercisesCount);
         const exercise = currentSet.personal_exercises[exIndex];
@@ -232,7 +233,7 @@ export const WorkoutPage: React.FC = () => {
 
       // Проверяем, завершен ли сет
       let completedCount = 0;
-      for (let i = 0; i <= nextRound; i++) {
+      for (let i = 0; i < nextRound; i++) {
         const exIndex = i % exercisesCount;
         const round = Math.floor(i / exercisesCount);
         const exercise = currentSet.personal_exercises[exIndex];

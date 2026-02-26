@@ -227,43 +227,90 @@ export const ChatPage: React.FC = () => {
 
     es.onmessage = event => {
       try {
+        console.log('[SSE] Raw event received:', event.data);
+
         let raw = event.data;
 
+        // Убираем префикс 'data: ' если он есть
         if (raw.startsWith('data: ')) {
           raw = raw.slice(6);
         }
 
+        console.log('[SSE] Parsing data:', raw);
         const data = JSON.parse(raw);
+        console.log('[SSE] Parsed event:', data);
+
+        if (data.type === 'connection') {
+          console.log('[SSE] Connection established:', data);
+          return;
+        }
 
         if (data.type === 'new_message') {
           const m = data.message;
+          console.log('[SSE] New message received:', m);
+
+          if (!m) {
+            console.error('[SSE] Message data is missing');
+            return;
+          }
+
+          if (!m.sender) {
+            console.error('[SSE] Sender data is missing');
+            return;
+          }
 
           const isOwn = m.sender.id === myUserId;
+          console.log(`[SSE] Message from sender ${m.sender.id}, myUserId: ${myUserId}, isOwn: ${isOwn}`);
 
           setMessages(prev => {
+            // Проверяем, есть ли уже сообщение с таким ID
             const exists = prev.some(msg => msg.id === String(m.id));
-            if (exists) return prev;
+            if (exists) {
+              console.log('[SSE] Message already exists, skipping');
+              return prev;
+            }
 
-            return [
-              ...prev,
-              {
-                id: String(m.id),
-                text: m.content ?? undefined,
-                image: m.photo_url ? `${process.env.REACT_APP_BASE_EMPTY_URL}${m.photo_url}` : undefined,
-                sender: isOwn ? 'user' : 'other',
-                timestamp: new Date(m.created_at),
-                status: isOwn ? 'delivered' : undefined,
-              },
-            ];
+            const newMessage = {
+              id: String(m.id),
+              text: m.content ?? undefined,
+              image: m.photo_url ? `${process.env.REACT_APP_BASE_EMPTY_URL}${m.photo_url}` : undefined,
+              sender: isOwn ? 'user' : 'other',
+              timestamp: new Date(m.created_at),
+              status: isOwn ? 'delivered' : undefined,
+            };
+
+            console.log('[SSE] Adding new message to state:', newMessage);
+
+            // Если это наше сообщение, заменяем временное сообщение с статусом "sending"
+            if (isOwn) {
+              const withoutTemp = prev.filter(msg =>
+                !(msg.status === 'sending' && msg.text === m.content)
+              );
+
+              // Принудительно прокручиваем к новому сообщению
+              setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              }, 100);
+
+              return [...withoutTemp, newMessage];
+            }
+
+            // Для сообщений от других - просто добавляем
+            setTimeout(() => {
+              messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+
+            return [...prev, newMessage];
           });
         }
       } catch (e) {
-        console.error('SSE parse error:', e, event.data);
+        console.error('[SSE] Parse error:', e, 'Raw data:', event.data);
       }
     };
 
-    es.onerror = () => {
-      console.error('SSE disconnected');
+    es.onerror = (error) => {
+      console.error('[SSE] Connection error:', error);
+      console.log('[SSE] EventSource readyState:', es.readyState);
     };
 
     return () => {
@@ -299,8 +346,26 @@ export const ChatPage: React.FC = () => {
     const text = inputValue;
     setInputValue('');
 
+    // Немедленно добавляем сообщение локально для отзывчивости UI
+    const tempId = `temp_${Date.now()}`;
+    const optimisticMessage = {
+      id: tempId,
+      text: text,
+      sender: 'user',
+      timestamp: new Date(),
+      status: 'sending' as const,
+    };
+
+    console.log('[SEND] Adding optimistic message:', optimisticMessage);
+    setMessages(prev => [...prev, optimisticMessage]);
+
+    // Прокручиваем к новому сообщению
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100);
+
     try {
-      await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/${chatId}/send/text`, {
+      const response = await fetch(`${process.env.REACT_APP_BASE_EMPTY_URL}/api/v1/realtime-chat/${chatId}/send/text`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -308,8 +373,24 @@ export const ChatPage: React.FC = () => {
         },
         body: JSON.stringify({ content: text }),
       });
+
+      if (response.ok) {
+        console.log('[SEND] Message sent successfully, waiting for SSE update');
+        // Обновляем статус на отправлено
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === tempId ? { ...msg, status: 'delivered' } : msg
+          )
+        );
+      } else {
+        console.error('[SEND] Failed to send message:', response.status);
+        // Убираем сообщение при ошибке
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      }
     } catch (e) {
-      console.error('sendMessage error', e);
+      console.error('[SEND] sendMessage error:', e);
+      // Убираем сообщение при ошибке
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
     }
   };
 

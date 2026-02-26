@@ -288,33 +288,56 @@ export const AdminChatPage: React.FC = () => {
           raw = raw.slice(6);
         }
 
+        console.log('[ADMIN SSE] Parsing data:', raw);
         const data = JSON.parse(raw);
+        console.log('[ADMIN SSE] Parsed event:', data);
+
+        if (data.type === 'connection') {
+          console.log('[ADMIN SSE] Connection established:', data);
+          return;
+        }
 
         if (data.type === 'new_message') {
           const m = data.message;
+          console.log('[ADMIN SSE] New message received:', m);
+
+          if (!m) {
+            console.error('[ADMIN SSE] Message data is missing');
+            return;
+          }
 
           const isOwn = m.sender?.telegram_id === currentUser.telegram_id;
+          console.log(`[ADMIN SSE] Message from telegram_id ${m.sender?.telegram_id}, current: ${currentUser.telegram_id}, isOwn: ${isOwn}`);
 
           setMessages(prev => {
             const exists = prev.some(msg => msg.id === String(m.id));
-            if (exists) return prev;
+            if (exists) {
+              console.log('[ADMIN SSE] Message already exists, skipping');
+              return prev;
+            }
 
-            return [
-              ...prev,
-              {
-                id: String(m.id),
-                text: m.content ?? undefined,
-                image: m.photo_url ? `${process.env.REACT_APP_BASE_EMPTY_URL}${m.photo_url}` : undefined,
-                sender: isOwn ? 'user' : 'other',
-                sender_id: m.sender_id,
-                timestamp: new Date(m.created_at),
-                status: isOwn ? 'delivered' : undefined,
-              },
-            ];
+            const newMessage = {
+              id: String(m.id),
+              text: m.content ?? undefined,
+              image: m.photo_url ? `${process.env.REACT_APP_BASE_EMPTY_URL}${m.photo_url}` : undefined,
+              sender: isOwn ? 'user' : 'other',
+              sender_id: m.sender_id,
+              timestamp: new Date(m.created_at),
+              status: isOwn ? 'delivered' : undefined,
+            };
+
+            console.log('[ADMIN SSE] Adding new message to state:', newMessage);
+
+            // Принудительно прокручиваем к новому сообщению
+            setTimeout(() => {
+              messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+
+            return [...prev, newMessage];
           });
         }
       } catch (e) {
-        console.error('SSE parse error:', e, event.data);
+        console.error('[ADMIN SSE] Parse error:', e, 'Raw data:', event.data);
       }
     };
 
