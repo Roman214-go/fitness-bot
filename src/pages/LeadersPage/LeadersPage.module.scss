@@ -37,23 +37,34 @@
   border-radius: 50%;
   background-color: #666;
   object-fit: cover;
+  display: block;
+  flex-shrink: 0;
 }
 
 .firstPlace {
   width: 120px;
   height: 120px;
+  min-width: 120px;
+  min-height: 120px;
+  max-width: 120px;
   border: 4px solid #d4af37;
 }
 
 .secondPlace {
   width: 80px;
   height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+  max-width: 80px;
   border: 3px solid #c0c0c0;
 }
 
 .thirdPlace {
   width: 80px;
   height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+  max-width: 80px;
   border: 3px solid #cd7f32;
 }
 
