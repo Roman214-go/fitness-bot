@@ -70,27 +70,11 @@ const HomePage = () => {
     });
   };
 
-  const formattedDate = upcomingWorkout
-    ? dayjs(upcomingWorkout.workout_dates[0].scheduled_date).format('DD.MM.YYYY')
-    : 'не назначена';
-
-  const totalExercises = upcomingWorkout
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      upcomingWorkout.personal_sets?.reduce((sum: number, set: any) => sum + set.personal_exercises.length, 0)
-    : 0;
-
   return (
     <div className={styles.container}>
       <div className={styles.container_trainee}>
-        {userData?.has_workout_plan ? (
-          <>
-            <h2 style={{ textAlign: 'center' }}>Начни свою тренировку</h2>
-            <div className={styles.trainee} onClick={handleStartUpcomingWorkout}>
-              <h2>Упражнений: {totalExercises}</h2>
-              <p>Ближайшая тренировка: {formattedDate}</p>
-            </div>
-          </>
-        ) : null}
+        {userData?.has_workout_plan ? <h2 style={{ textAlign: 'center' }}>Начни свою тренировку</h2> : null}
+
         {checkSubscriptionStatus(userData?.subscription) && userData?.fitness_goals.workout_format === 'home' ? (
           <Button buttonType='secondary' onClick={() => setIsEquipmentOpen(true)}>
             Необходимый инвентарь для тренировок
@@ -126,6 +110,13 @@ const HomePage = () => {
       )}
 
       <CalorieChart totalCalories={userData?.nutrition.calories} segments={segments} />
+      {userData?.has_workout_plan ? (
+        <>
+          <div className={styles.trainee} onClick={handleStartUpcomingWorkout}>
+            <h2>Начать тренировку</h2>
+          </div>
+        </>
+      ) : null}
 
       <ToastContainer theme='light' hideProgressBar autoClose={3000} style={{ marginTop: '90px' }} />
     </div>
